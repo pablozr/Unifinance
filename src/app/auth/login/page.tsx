@@ -36,8 +36,10 @@ export default function LoginPage() {
       const { error } = await signIn(data.email, data.password);
 
       if (error) {
+        console.error('Authentication error occurred');
+        // Generic error message to avoid leaking information
         toast.error('Authentication failed', {
-          description: error.message,
+          description: 'Invalid email or password',
         });
         return;
       }
@@ -48,7 +50,14 @@ export default function LoginPage() {
 
       // Check if there's a redirect parameter in the URL
       const searchParams = new URLSearchParams(window.location.search);
-      const redirectPath = searchParams.get('redirect') || '/dashboard/test';
+      let redirectPath = searchParams.get('redirect') || '/dashboard';
+
+      // Validate the redirect path to prevent open redirect vulnerabilities
+      // Only allow redirects to paths within our application
+      if (!redirectPath.startsWith('/') || redirectPath.startsWith('//') || redirectPath.includes(':')) {
+        console.warn('Invalid redirect path detected:', redirectPath);
+        redirectPath = '/dashboard';
+      }
 
       // Add a small delay to ensure the cookie is set before redirecting
       setTimeout(() => {

@@ -46,7 +46,8 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Invalid token' }, { status: 401 });
   }
 
-  console.log('User authenticated:', user.email);
+  // Log only that authentication was successful, not the email (for privacy)
+  console.log('User authenticated successfully');
   const userId = user.id;
 
   try {

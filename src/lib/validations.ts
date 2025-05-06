@@ -16,22 +16,33 @@ export const signUpSchema = z.object({
 });
 
 export const signInSchema = z.object({
-  email: z.string().email({ message: 'Please enter a valid email address' }),
-  password: z.string().min(1, { message: 'Please enter your password' }),
+  email: z.string()
+    .min(1, { message: 'Email is required' })
+    .email({ message: 'Please enter a valid email address' })
+    .max(255, { message: 'Email is too long' }),
+  password: z.string()
+    .min(1, { message: 'Please enter your password' })
+    .max(100, { message: 'Password is too long' }),
 });
 
 // Transaction schema
 export const transactionSchema = z.object({
   amount: z.coerce
     .number()
-    .positive({ message: 'Amount must be a positive number' }),
+    .positive({ message: 'Amount must be a positive number' })
+    .max(9999999.99, { message: 'Amount is too large' }),
   description: z
     .string()
+    .trim()
     .min(1, { message: 'Description is required' })
-    .max(500, { message: 'Description must be less than 500 characters' }),
-  category_id: z.string().min(1, { message: 'Category is required' }),
+    .max(500, { message: 'Description must be less than 500 characters' })
+    // Prevent script injection
+    .refine(val => !/<script.*?>.*?<\/script>/i.test(val), {
+      message: 'Description contains invalid characters'
+    }),
+  category_id: z.string().uuid({ message: 'Invalid category ID format' }),
   date: z.union([
-    z.string().regex(/^\d{4}-\d{2}-\d{2}/, { message: 'Date must be in YYYY-MM-DD format' }),
+    z.string().regex(/^\d{4}-\d{2}-\d{2}$/, { message: 'Date must be in YYYY-MM-DD format' }),
     z.date()
   ]),
   type: z.enum(['income', 'expense']),

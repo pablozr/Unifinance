@@ -17,38 +17,38 @@ export default function ReportsPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [transactions, setTransactions] = useState<DBTransaction[]>([]);
   const [categories, setCategories] = useState<DBCategory[]>([]);
-  
+
   // Chart data states
   const [monthlyData, setMonthlyData] = useState<{name: string; income: number; expense: number}[]>([]);
   const [categoryData, setCategoryData] = useState<{name: string; value: number; color: string}[]>([]);
   const [yearlyData, setYearlyData] = useState<{name: string; income: number; expense: number}[]>([]);
-  
+
   // Filter states
   const [selectedYear, setSelectedYear] = useState<number>(new Date().getFullYear());
   const [selectedMonth, setSelectedMonth] = useState<number>(new Date().getMonth() + 1);
   const [selectedTab, setSelectedTab] = useState('monthly');
-  
+
   // Load user data
   const loadUserData = async () => {
     if (!user) return;
-    
+
     setIsLoading(true);
     try {
       // Load categories
-      const userCategories = await categoryService.getUserCategories(user.id);
+      const userCategories = await categoryService.getCategories(user.id);
       setCategories(userCategories);
-      
+
       // Load all transactions for the selected year
-      const { data: transactionsData } = await transactionService.getUserTransactions(
-        user.id, 
-        { year: selectedYear, limit: 1000 }
+      const transactionsData = await transactionService.getAllTransactions(
+        user.id,
+        selectedYear
       );
-      
+
       setTransactions(transactionsData);
-      
+
       // Process data for charts
       processChartData(transactionsData, userCategories);
-      
+
     } catch (error) {
       console.error('Error loading user data:', error);
       toast.error('Failed to load data');
@@ -56,43 +56,46 @@ export default function ReportsPage() {
       setIsLoading(false);
     }
   };
-  
+
   // Process data for charts
   const processChartData = (transactions: DBTransaction[], categories: DBCategory[]) => {
     // Process monthly data
     const monthlyDataMap = new Map<string, { income: number; expense: number }>();
     const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-    
+
     // Initialize all months with zero values
     months.forEach((month, index) => {
       monthlyDataMap.set(month, { income: 0, expense: 0 });
     });
-    
+
     // Process yearly data
     const yearlyDataMap = new Map<string, { income: number; expense: number }>();
     const currentYear = new Date().getFullYear();
-    
+
     // Initialize last 5 years with zero values
     for (let i = 0; i < 5; i++) {
       const year = currentYear - i;
       yearlyDataMap.set(year.toString(), { income: 0, expense: 0 });
     }
-    
+
     // Process category data for the selected month
     const categoryDataMap = new Map<string, { value: number; color: string }>();
-    
+
     // Initialize all categories with zero values
     categories.forEach(category => {
       categoryDataMap.set(category.name, { value: 0, color: category.color });
     });
-    
+
+    // Add an "Uncategorized" category for transactions without a category
+    categoryDataMap.set('Uncategorized', { value: 0, color: '#888888' });
+
     // Process transactions
     transactions.forEach(transaction => {
       const date = new Date(transaction.date);
       const month = months[date.getMonth()];
       const year = date.getFullYear().toString();
       const category = categories.find(c => c.id === transaction.category_id);
-      
+
       // Update monthly data
       if (monthlyDataMap.has(month)) {
         const monthData = monthlyDataMap.get(month)!;
@@ -103,7 +106,7 @@ export default function ReportsPage() {
         }
         monthlyDataMap.set(month, monthData);
       }
-      
+
       // Update yearly data
       if (yearlyDataMap.has(year)) {
         const yearData = yearlyDataMap.get(year)!;
@@ -114,24 +117,26 @@ export default function ReportsPage() {
         }
         yearlyDataMap.set(year, yearData);
       }
-      
+
       // Update category data for the selected month
       if (date.getMonth() + 1 === selectedMonth && date.getFullYear() === selectedYear) {
-        if (category && transaction.type === 'expense') {
-          const categoryData = categoryDataMap.get(category.name) || { value: 0, color: category.color };
+        if (transaction.type === 'expense') {
+          const categoryName = category ? category.name : 'Uncategorized';
+          const categoryColor = category ? category.color : '#888888';
+          const categoryData = categoryDataMap.get(categoryName) || { value: 0, color: categoryColor };
           categoryData.value += transaction.amount;
-          categoryDataMap.set(category.name, categoryData);
+          categoryDataMap.set(categoryName, categoryData);
         }
       }
     });
-    
+
     // Convert maps to arrays for charts
     const monthlyDataArray = Array.from(monthlyDataMap.entries()).map(([name, data]) => ({
       name,
       income: data.income,
       expense: data.expense
     }));
-    
+
     const yearlyDataArray = Array.from(yearlyDataMap.entries())
       .sort((a, b) => parseInt(a[0]) - parseInt(b[0]))
       .map(([name, data]) => ({
@@ -139,7 +144,7 @@ export default function ReportsPage() {
         income: data.income,
         expense: data.expense
       }));
-    
+
     const categoryDataArray = Array.from(categoryDataMap.entries())
       .filter(([_, data]) => data.value > 0)
       .map(([name, data]) => ({
@@ -148,23 +153,23 @@ export default function ReportsPage() {
         color: data.color
       }))
       .sort((a, b) => b.value - a.value);
-    
+
     setMonthlyData(monthlyDataArray);
     setYearlyData(yearlyDataArray);
     setCategoryData(categoryDataArray);
   };
-  
+
   // Load data when user or filters change
   useEffect(() => {
     if (user) {
       loadUserData();
     }
   }, [user, selectedYear, selectedMonth]);
-  
+
   // Generate year options
   const currentYear = new Date().getFullYear();
   const yearOptions = Array.from({ length: 5 }, (_, i) => currentYear - i);
-  
+
   // Generate month options
   const monthOptions = [
     { value: 1, label: 'January' },
@@ -180,7 +185,7 @@ export default function ReportsPage() {
     { value: 11, label: 'November' },
     { value: 12, label: 'December' }
   ];
-  
+
   return (
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
@@ -190,7 +195,7 @@ export default function ReportsPage() {
             Analyze your financial data with detailed reports and charts
           </p>
         </div>
-        
+
         <div className="flex flex-wrap gap-2">
           <Select value={selectedYear.toString()} onValueChange={(value) => setSelectedYear(parseInt(value))}>
             <SelectTrigger className="w-[120px] border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-200">
@@ -204,7 +209,7 @@ export default function ReportsPage() {
               ))}
             </SelectContent>
           </Select>
-          
+
           <Select value={selectedMonth.toString()} onValueChange={(value) => setSelectedMonth(parseInt(value))}>
             <SelectTrigger className="w-[140px] border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-200">
               <SelectValue placeholder="Month" />
@@ -219,7 +224,7 @@ export default function ReportsPage() {
           </Select>
         </div>
       </div>
-      
+
       <Tabs value={selectedTab} onValueChange={setSelectedTab} className="w-full">
         <TabsList className="grid w-full grid-cols-2 bg-gray-100 dark:bg-gray-700 rounded-lg p-1">
           <TabsTrigger value="monthly" className="rounded-md data-[state=active]:bg-white dark:data-[state=active]:bg-gray-800 data-[state=active]:text-gray-900 dark:data-[state=active]:text-gray-100">
@@ -229,7 +234,7 @@ export default function ReportsPage() {
             Yearly Analysis
           </TabsTrigger>
         </TabsList>
-        
+
         <TabsContent value="monthly" className="mt-4 space-y-6">
           {/* Income vs Expenses Chart */}
           <Card className="border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 shadow-sm">
@@ -249,7 +254,7 @@ export default function ReportsPage() {
               )}
             </CardContent>
           </Card>
-          
+
           {/* Expense Categories Chart */}
           <Card className="border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 shadow-sm">
             <CardHeader>
@@ -273,7 +278,7 @@ export default function ReportsPage() {
             </CardContent>
           </Card>
         </TabsContent>
-        
+
         <TabsContent value="yearly" className="mt-4 space-y-6">
           {/* Yearly Income vs Expenses Chart */}
           <Card className="border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 shadow-sm">
@@ -293,7 +298,7 @@ export default function ReportsPage() {
               )}
             </CardContent>
           </Card>
-          
+
           {/* Annual Summary */}
           <Card className="border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 shadow-sm">
             <CardHeader>

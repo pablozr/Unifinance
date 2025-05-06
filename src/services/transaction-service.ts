@@ -3,15 +3,127 @@ import { transactionSchema } from '@/lib/validations';
 import { z } from 'zod';
 
 export type TransactionInput = z.infer<typeof transactionSchema>;
+export type TransactionType = 'income' | 'expense';
+
+interface TransactionFilters {
+  page?: number;
+  limit?: number;
+  searchTerm?: string;
+  categoryId?: string;
+  type?: TransactionType;
+  year?: number;
+  month?: number;
+  startDate?: string;
+  endDate?: string;
+}
 
 export const transactionService = {
   /**
-   * Get all transactions for a user
+   * Get transactions for a user with pagination and filtering
+   * @param userId User ID
+   * @param filters Optional filters and pagination options
+   * @returns Object containing transactions data and total count
+   */
+  async getTransactions(
+    userId: string,
+    filters?: TransactionFilters
+  ): Promise<{ data: Transaction[], count: number }> {
+    // Set default values
+    const page = filters?.page || 1;
+    const limit = filters?.limit || 20;
+    const from = (page - 1) * limit;
+    const to = from + limit - 1;
+
+    // Build count query first (without range)
+    let countQuery = supabase
+      .from('transactions')
+      .select('id', { count: 'exact', head: true })
+      .eq('user_id', userId);
+
+    // Build data query
+    let dataQuery = supabase
+      .from('transactions')
+      .select(`
+        id,
+        user_id,
+        amount,
+        description,
+        category_id,
+        date,
+        type,
+        created_at
+      `)
+      .eq('user_id', userId)
+      .order('date', { ascending: false })
+      .range(from, to);
+
+    // Apply filters to both queries
+    // Filter by search term
+    if (filters?.searchTerm) {
+      const searchPattern = `%${filters.searchTerm}%`;
+      countQuery = countQuery.ilike('description', searchPattern);
+      dataQuery = dataQuery.ilike('description', searchPattern);
+    }
+
+    // Filter by category
+    if (filters?.categoryId) {
+      countQuery = countQuery.eq('category_id', filters.categoryId);
+      dataQuery = dataQuery.eq('category_id', filters.categoryId);
+    }
+
+    // Filter by transaction type
+    if (filters?.type) {
+      countQuery = countQuery.eq('type', filters.type);
+      dataQuery = dataQuery.eq('type', filters.type);
+    }
+
+    // Filter by year and month
+    if (filters?.year && filters?.month) {
+      // Create date range for the specified month
+      const startDate = new Date(filters.year, filters.month - 1, 1).toISOString();
+      const endDate = new Date(filters.year, filters.month, 0).toISOString();
+
+      countQuery = countQuery.gte('date', startDate).lte('date', endDate);
+      dataQuery = dataQuery.gte('date', startDate).lte('date', endDate);
+    } else if (filters?.year) {
+      // Create date range for the specified year
+      const startDate = new Date(filters.year, 0, 1).toISOString();
+      const endDate = new Date(filters.year, 11, 31).toISOString();
+
+      countQuery = countQuery.gte('date', startDate).lte('date', endDate);
+      dataQuery = dataQuery.gte('date', startDate).lte('date', endDate);
+    }
+
+    // Execute both queries
+    const [countResult, dataResult] = await Promise.all([
+      countQuery,
+      dataQuery
+    ]);
+
+    // Handle errors
+    if (countResult.error) {
+      console.error('Error counting transactions:', countResult.error);
+      throw countResult.error;
+    }
+
+    if (dataResult.error) {
+      console.error('Error fetching transactions:', dataResult.error);
+      throw dataResult.error;
+    }
+
+    return {
+      data: dataResult.data || [],
+      count: countResult.count || 0
+    };
+  },
+
+  /**
+   * Get all transactions for a user (legacy method)
    * @param userId User ID
    * @param year Optional year to filter by
    * @param month Optional month to filter by (1-12)
    */
-  async getTransactions(userId: string, year?: number, month?: number): Promise<Transaction[]> {
+  async getAllTransactions(userId: string, year?: number, month?: number): Promise<Transaction[]> {
     let query = supabase
       .from('transactions')
       .select(`

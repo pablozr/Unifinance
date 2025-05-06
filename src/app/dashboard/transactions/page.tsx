@@ -34,13 +34,13 @@ export default function TransactionsPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const transactionsPerPage = 20;
-  
+
   // Filter states
   const [searchTerm, setSearchTerm] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('all');
   const [typeFilter, setTypeFilter] = useState('all');
   const [dateFilter, setDateFilter] = useState('all');
-  
+
   // Date filter states
   const currentDate = new Date();
 
@@ -56,10 +56,10 @@ export default function TransactionsPage() {
   );
 
   // Use the transaction modal context
-  const { 
-    isAddingTransaction, 
-    setIsAddingTransaction, 
-    newTransaction, 
+  const {
+    isAddingTransaction,
+    setIsAddingTransaction,
+    newTransaction,
     setNewTransaction,
     openAddTransactionModal
   } = useTransactionModal();
@@ -67,16 +67,16 @@ export default function TransactionsPage() {
   // Load user data
   const loadUserData = async () => {
     if (!user) return;
-    
+
     setIsLoading(true);
     try {
       // Load categories
-      const userCategories = await categoryService.getUserCategories(user.id);
+      const userCategories = await categoryService.getCategories(user.id);
       setCategories(userCategories);
-      
+
       // Load transactions with pagination
-      const { data: transactionsData, count } = await transactionService.getUserTransactions(
-        user.id, 
+      const { data: transactionsData, count } = await transactionService.getTransactions(
+        user.id,
         {
           page: currentPage,
           limit: transactionsPerPage,
@@ -87,10 +87,10 @@ export default function TransactionsPage() {
           month: dateFilter !== 'all' ? selectedMonth : undefined
         }
       );
-      
+
       // Calculate total pages
       setTotalPages(Math.ceil((count || 0) / transactionsPerPage));
-      
+
       // Add category names to transactions
       const enhancedTransactions = transactionsData.map(transaction => {
         const category = userCategories.find(c => c.id === transaction.category_id);
@@ -100,7 +100,7 @@ export default function TransactionsPage() {
           category_color: category?.color || '#888888'
         };
       });
-      
+
       setTransactions(enhancedTransactions);
     } catch (error) {
       console.error('Error loading user data:', error);
@@ -123,42 +123,58 @@ export default function TransactionsPage() {
       toast.error('You must be logged in to clear transactions');
       return;
     }
-    
+
     setIsClearing(true);
-    
+
     try {
       // Get the user's session token
       const { data: { session } } = await supabase.auth.getSession();
-      
+
       if (!session) {
         toast.error('Authentication error. Please log in again.');
         return;
       }
-      
+
+      // Get CSRF token from localStorage safely (handling SSR case)
+      let csrfToken = '';
+      if (typeof window !== 'undefined') {
+        csrfToken = localStorage.getItem('csrf_token') || '';
+
+        // If no CSRF token exists, generate one
+        if (!csrfToken) {
+          csrfToken = Math.random().toString(36).substring(2, 15) +
+                     Math.random().toString(36).substring(2, 15);
+          localStorage.setItem('csrf_token', csrfToken);
+        }
+      }
+
       // Call the API to clear all transactions
       const response = await fetch('/api/transactions/clear', {
         method: 'DELETE',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${session.access_token}`
-        }
+          'Authorization': `Bearer ${session.access_token}`,
+          'X-CSRF-Token': csrfToken
+        },
+        // Include credentials to ensure cookies are sent
+        credentials: 'include'
       });
-      
+
       const result = await response.json();
-      
+
       if (!response.ok) {
         throw new Error(result.error || 'Failed to clear transactions');
       }
-      
+
       // Close the dialog
       setIsClearDialogOpen(false);
-      
+
       // Reload the data
       loadUserData();
-      
+
       // Show success message
       toast.success(`Successfully cleared ${result.count} transactions`);
-      
+
     } catch (error) {
       console.error('Error clearing transactions:', error);
       toast.error('Failed to clear transactions');
@@ -191,8 +207,8 @@ export default function TransactionsPage() {
             </DialogDescription>
           </DialogHeader>
           <DialogFooter className="flex justify-between">
-            <Button 
-              variant="outline" 
+            <Button
+              variant="outline"
               onClick={() => setIsClearDialogOpen(false)}
               className="border-gray-300 dark:border-gray-600 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700"
             >
@@ -208,7 +224,7 @@ export default function TransactionsPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-      
+
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <h1 className="text-3xl font-bold tracking-tight text-black dark:text-white">Transactions</h1>
@@ -274,9 +290,9 @@ export default function TransactionsPage() {
         <CardHeader className="flex flex-row items-center justify-between pb-2 pt-6">
           <CardTitle className="text-xl text-gray-800 dark:text-gray-200">All Transactions</CardTitle>
           <div className="flex items-center gap-2">
-            <Button 
-              variant="outline" 
-              size="sm" 
+            <Button
+              variant="outline"
+              size="sm"
               className="border-red-300 dark:border-red-700 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 hover:text-red-700 dark:hover:text-red-300"
               onClick={() => setIsClearDialogOpen(true)}
             >
@@ -298,8 +314,8 @@ export default function TransactionsPage() {
               </svg>
               Clear All
             </Button>
-            <Button 
-              className="bg-blue-600 hover:bg-blue-700 text-white border-0 dark:bg-blue-500 dark:hover:bg-blue-600" 
+            <Button
+              className="bg-blue-600 hover:bg-blue-700 text-white border-0 dark:bg-blue-500 dark:hover:bg-blue-600"
               onClick={() => openAddTransactionModal()}
             >
               <svg
@@ -346,11 +362,11 @@ export default function TransactionsPage() {
                         {transaction.description}
                       </td>
                       <td className="px-4 py-3 text-sm">
-                        <span 
-                          className="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium" 
-                          style={{ 
-                            backgroundColor: `${transaction.category_color}20`, 
-                            color: transaction.category_color 
+                        <span
+                          className="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium"
+                          style={{
+                            backgroundColor: `${transaction.category_color}20`,
+                            color: transaction.category_color
                           }}
                         >
                           {transaction.category_name}
@@ -395,26 +411,23 @@ export default function TransactionsPage() {
             <Pagination className="mx-auto">
               <PaginationContent>
                 <PaginationItem>
-                  <PaginationPrevious 
+                  <PaginationPrevious
                     onClick={() => handlePageChange(Math.max(1, currentPage - 1))}
-                    className={currentPage === 1 ? 'pointer-events-none opacity-50' : ''}
-                  />
+                    className={currentPage === 1 ? 'pointer-events-none opacity-50' : ''} size={undefined}                  />
                 </PaginationItem>
                 {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
                   <PaginationItem key={page}>
                     <PaginationLink
                       onClick={() => handlePageChange(page)}
-                      isActive={page === currentPage}
-                    >
+                      isActive={page === currentPage} size={undefined}                    >
                       {page}
                     </PaginationLink>
                   </PaginationItem>
                 ))}
                 <PaginationItem>
-                  <PaginationNext 
+                  <PaginationNext
                     onClick={() => handlePageChange(Math.min(totalPages, currentPage + 1))}
-                    className={currentPage === totalPages ? 'pointer-events-none opacity-50' : ''}
-                  />
+                    className={currentPage === totalPages ? 'pointer-events-none opacity-50' : ''} size={undefined}                  />
                 </PaginationItem>
               </PaginationContent>
             </Pagination>
@@ -424,3 +437,6 @@ export default function TransactionsPage() {
     </div>
   );
 }
+
+
+

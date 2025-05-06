@@ -12,6 +12,7 @@ import { ImportMapping } from '@/components/import/import-mapping';
 import { importService } from '@/services/import-service';
 import { ImportedTransaction, BANK_TEMPLATES } from '@/lib/import-types';
 import { supabase } from '@/lib/supabase';
+import { categoryService, transactionService } from '@/services';
 
 // Simplified category interface for import page
 interface Category {
@@ -24,7 +25,6 @@ interface Category {
 
 export default function ImportPage() {
   const { user } = useAuth();
-  const router = useRouter();
 
   // State for the import process
   const [importStep, setImportStep] = useState<'upload' | 'mapping' | 'importing' | 'complete'>('upload');
@@ -382,14 +382,16 @@ export default function ImportPage() {
         // Redirect to dashboard after a short delay with the correct month/year
         setTimeout(() => {
           console.log(`Redirecting to dashboard for ${year}/${month}...`);
-          router.refresh(); // Force refresh the router cache
+          // Get the router instance
+          const { refresh, push } = useRouter();
+          refresh(); // Force refresh the router cache
 
           // Use query parameters to set the month/year in the dashboard
           const searchParams = new URLSearchParams();
           searchParams.set('year', year.toString());
           searchParams.set('month', month.toString());
 
-          router.push(`/dashboard?${searchParams.toString()}`);
+          push(`/dashboard?${searchParams.toString()}`);
         }, 2000);
       }
     } catch (error) {
@@ -423,7 +425,7 @@ export default function ImportPage() {
         </div>
         <Button
           variant="outline"
-          onClick={() => router.push('/dashboard')}
+          onClick={() => useRouter().push('/dashboard')}
           className="border-gray-300 dark:border-gray-600 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-gray-800 dark:hover:text-gray-200"
         >
           <svg
@@ -566,7 +568,7 @@ export default function ImportPage() {
               </CardContent>
               <CardFooter className="flex justify-center border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-700">
                 <Button
-                  onClick={() => router.push('/dashboard')}
+                  onClick={() => useRouter().push('/dashboard')}
                   className="bg-blue-600 hover:bg-blue-700 text-white border-0 dark:bg-blue-500 dark:hover:bg-blue-600"
                 >
                   Return to Dashboard
@@ -671,3 +673,6 @@ export default function ImportPage() {
     </div>
   );
 }
+
+
+

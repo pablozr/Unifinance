@@ -11,6 +11,7 @@ import { transactionService, categoryService } from '@/services';
 import { Transaction as DBTransaction, Category as DBCategory, supabase } from '@/lib/supabase';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Progress } from '@/components/ui/progress';
+import { cn } from '@/lib/utils';
 
 // Budget interface
 interface Budget {
@@ -29,7 +30,7 @@ export default function BudgetsPage() {
   const [categories, setCategories] = useState<DBCategory[]>([]);
   const [budgets, setBudgets] = useState<(Budget & { category_name: string; category_color: string; spent: number; percentage: number })[]>([]);
   const [transactions, setTransactions] = useState<DBTransaction[]>([]);
-  
+
   // New budget state
   const [isAddingBudget, setIsAddingBudget] = useState(false);
   const [newBudget, setNewBudget] = useState({
@@ -37,50 +38,50 @@ export default function BudgetsPage() {
     amount: '',
     period: 'monthly' as 'monthly' | 'yearly',
   });
-  
+
   // Load user data
   const loadUserData = async () => {
     if (!user) return;
-    
+
     setIsLoading(true);
     try {
       // Load categories
-      const userCategories = await categoryService.getUserCategories(user.id);
+      const userCategories = await categoryService.getCategories(user.id);
       setCategories(userCategories);
-      
+
       // Load budgets
       const { data: budgetsData, error: budgetsError } = await supabase
         .from('budgets')
         .select('*')
         .eq('user_id', user.id);
-      
+
       if (budgetsError) {
         throw budgetsError;
       }
-      
+
       // Load transactions for the current month
       const currentDate = new Date();
       const currentYear = currentDate.getFullYear();
       const currentMonth = currentDate.getMonth() + 1;
-      
-      const { data: transactionsData } = await transactionService.getUserTransactions(
-        user.id, 
-        { 
-          year: currentYear, 
+
+      const { data: transactionsData } = await transactionService.getTransactions(
+        user.id,
+        {
+          year: currentYear,
           month: currentMonth,
           type: 'expense'
         }
       );
-      
+
       setTransactions(transactionsData);
-      
+
       // Calculate spent amount for each budget
       const enhancedBudgets = (budgetsData || []).map(budget => {
         const category = userCategories.find(c => c.id === budget.category_id);
         const categoryTransactions = transactionsData.filter(t => t.category_id === budget.category_id);
         const spent = categoryTransactions.reduce((sum, t) => sum + t.amount, 0);
         const percentage = Math.min(100, Math.round((spent / budget.amount) * 100));
-        
+
         return {
           ...budget,
           category_name: category?.name || 'Unknown Category',
@@ -89,9 +90,9 @@ export default function BudgetsPage() {
           percentage
         };
       });
-      
+
       setBudgets(enhancedBudgets);
-      
+
     } catch (error) {
       console.error('Error loading user data:', error);
       toast.error('Failed to load data');
@@ -99,37 +100,37 @@ export default function BudgetsPage() {
       setIsLoading(false);
     }
   };
-  
+
   // Load data when user changes
   useEffect(() => {
     if (user) {
       loadUserData();
     }
   }, [user]);
-  
+
   // Handle adding a new budget
-  const handleAddBudget = async (e: React.FormEvent) => {
+  const handleAddBudget = async (e: React.MouseEvent) => {
     e.preventDefault();
-    
+
     if (!user) return;
-    
+
     try {
       // Validate the form
       if (!newBudget.category_id || !newBudget.amount) {
         toast.error('Please fill in all fields');
         return;
       }
-      
+
       // Convert amount to number
       const amount = parseFloat(newBudget.amount);
       if (isNaN(amount) || amount <= 0) {
         toast.error('Please enter a valid amount');
         return;
       }
-      
+
       // Check if budget already exists for this category
       const existingBudget = budgets.find(b => b.category_id === newBudget.category_id);
-      
+
       if (existingBudget) {
         // Update existing budget
         const { data, error } = await supabase
@@ -141,11 +142,11 @@ export default function BudgetsPage() {
           })
           .eq('id', existingBudget.id)
           .select();
-        
+
         if (error) {
           throw error;
         }
-        
+
         toast.success('Budget updated successfully');
       } else {
         // Create new budget
@@ -162,14 +163,14 @@ export default function BudgetsPage() {
             }
           ])
           .select();
-        
+
         if (error) {
           throw error;
         }
-        
+
         toast.success('Budget added successfully');
       }
-      
+
       // Close the modal and reset the form
       setIsAddingBudget(false);
       setNewBudget({
@@ -177,41 +178,41 @@ export default function BudgetsPage() {
         amount: '',
         period: 'monthly',
       });
-      
+
       // Reload the data
       loadUserData();
-      
+
     } catch (error) {
       console.error('Error adding budget:', error);
       toast.error('Failed to add budget');
     }
   };
-  
+
   // Handle deleting a budget
   const handleDeleteBudget = async (budgetId: string) => {
     if (!user) return;
-    
+
     try {
       const { error } = await supabase
         .from('budgets')
         .delete()
         .eq('id', budgetId);
-      
+
       if (error) {
         throw error;
       }
-      
+
       toast.success('Budget deleted successfully');
-      
+
       // Reload the data
       loadUserData();
-      
+
     } catch (error) {
       console.error('Error deleting budget:', error);
       toast.error('Failed to delete budget');
     }
   };
-  
+
   return (
     <div className="space-y-6">
       {/* Add Budget Dialog */}
@@ -223,88 +224,87 @@ export default function BudgetsPage() {
               Set a budget for a specific category to track your spending
             </DialogDescription>
           </DialogHeader>
-          <form onSubmit={handleAddBudget}>
-            <div className="grid gap-4 py-4">
-              <div className="grid gap-2">
-                <label htmlFor="category" className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                  Category
-                </label>
-                <Select
-                  value={newBudget.category_id}
-                  onValueChange={(value) => setNewBudget({ ...newBudget, category_id: value })}
-                >
-                  <SelectTrigger className="border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-200">
-                    <SelectValue placeholder="Select a category" />
-                  </SelectTrigger>
-                  <SelectContent className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-800 dark:text-gray-200">
-                    {categories
-                      .filter(c => {
-                        // Filter out income categories
-                        const incomeCategories = ['Salary', 'Freelance', 'Investments', 'Gifts', 'Other Income'];
-                        return !incomeCategories.includes(c.name);
-                      })
-                      .map(category => (
-                        <SelectItem key={category.id} value={category.id}>
-                          {category.name}
-                        </SelectItem>
-                      ))
-                    }
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="grid gap-2">
-                <label htmlFor="amount" className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                  Budget Amount
-                </label>
-                <Input
-                  id="amount"
-                  type="number"
-                  step="0.01"
-                  min="0"
-                  placeholder="0.00"
-                  value={newBudget.amount}
-                  onChange={(e) => setNewBudget({ ...newBudget, amount: e.target.value })}
-                  className="border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-200"
-                />
-              </div>
-              <div className="grid gap-2">
-                <label htmlFor="period" className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                  Period
-                </label>
-                <Select
-                  value={newBudget.period}
-                  onValueChange={(value: 'monthly' | 'yearly') => setNewBudget({ ...newBudget, period: value })}
-                >
-                  <SelectTrigger className="border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-200">
-                    <SelectValue placeholder="Select a period" />
-                  </SelectTrigger>
-                  <SelectContent className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-800 dark:text-gray-200">
-                    <SelectItem value="monthly">Monthly</SelectItem>
-                    <SelectItem value="yearly">Yearly</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
+          <div className="grid gap-4 py-4">
+            <div className="grid gap-2">
+              <label htmlFor="category" className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                Category
+              </label>
+              <Select
+                value={newBudget.category_id}
+                onValueChange={(value) => setNewBudget({ ...newBudget, category_id: value })}
+              >
+                <SelectTrigger className="border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-200">
+                  <SelectValue placeholder="Select a category" />
+                </SelectTrigger>
+                <SelectContent className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-800 dark:text-gray-200">
+                  {categories
+                    .filter(c => {
+                      // Filter out income categories
+                      const incomeCategories = ['Salary', 'Freelance', 'Investments', 'Gifts', 'Other Income'];
+                      return !incomeCategories.includes(c.name);
+                    })
+                    .map(category => (
+                      <SelectItem key={category.id} value={category.id}>
+                        {category.name}
+                      </SelectItem>
+                    ))
+                  }
+                </SelectContent>
+              </Select>
             </div>
-            <DialogFooter>
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => setIsAddingBudget(false)}
-                className="border-gray-300 dark:border-gray-600 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700"
+            <div className="grid gap-2">
+              <label htmlFor="amount" className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                Budget Amount
+              </label>
+              <Input
+                id="amount"
+                type="number"
+                step="0.01"
+                min="0"
+                placeholder="0.00"
+                value={newBudget.amount}
+                onChange={(e) => setNewBudget({ ...newBudget, amount: e.target.value })}
+                className="border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-200"
+              />
+            </div>
+            <div className="grid gap-2">
+              <label htmlFor="period" className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                Period
+              </label>
+              <Select
+                value={newBudget.period}
+                onValueChange={(value: 'monthly' | 'yearly') => setNewBudget({ ...newBudget, period: value })}
               >
-                Cancel
-              </Button>
-              <Button
-                type="submit"
-                className="bg-blue-600 hover:bg-blue-700 text-white border-0 dark:bg-blue-500 dark:hover:bg-blue-600"
-              >
-                Save Budget
-              </Button>
-            </DialogFooter>
-          </form>
+                <SelectTrigger className="border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-200">
+                  <SelectValue placeholder="Select a period" />
+                </SelectTrigger>
+                <SelectContent className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-800 dark:text-gray-200">
+                  <SelectItem value="monthly">Monthly</SelectItem>
+                  <SelectItem value="yearly">Yearly</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setIsAddingBudget(false)}
+              className="border-gray-300 dark:border-gray-600 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700"
+            >
+              Cancel
+            </Button>
+            <Button
+              type="button"
+              onClick={(e) => handleAddBudget(e)}
+              className="bg-blue-600 hover:bg-blue-700 text-white border-0 dark:bg-blue-500 dark:hover:bg-blue-600"
+            >
+              Save Budget
+            </Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
-      
+
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <h1 className="text-3xl font-bold tracking-tight text-black dark:text-white">Budgets</h1>
@@ -332,7 +332,7 @@ export default function BudgetsPage() {
           Add Budget
         </Button>
       </div>
-      
+
       {isLoading ? (
         <div className="flex justify-center py-8">
           <div className="h-8 w-8 animate-spin rounded-full border-4 border-blue-600 border-t-transparent"></div>
@@ -344,8 +344,8 @@ export default function BudgetsPage() {
               <CardHeader className="pb-2">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
-                    <div 
-                      className="h-3 w-3 rounded-full" 
+                    <div
+                      className="h-3 w-3 rounded-full"
                       style={{ backgroundColor: budget.category_color }}
                     />
                     <CardTitle className="text-lg text-gray-800 dark:text-gray-200">{budget.category_name}</CardTitle>
@@ -387,16 +387,16 @@ export default function BudgetsPage() {
                       Budget: ${budget.amount.toFixed(2)}
                     </div>
                   </div>
-                  <Progress 
-                    value={budget.percentage} 
-                    className="h-2 bg-gray-200 dark:bg-gray-700"
-                    indicatorClassName={
+                  <Progress
+                    value={budget.percentage}
+                    className={cn(
+                      "h-2 bg-gray-200 dark:bg-gray-700",
                       budget.percentage >= 100
                         ? "bg-red-600 dark:bg-red-500"
                         : budget.percentage >= 75
                         ? "bg-yellow-600 dark:bg-yellow-500"
                         : "bg-green-600 dark:bg-green-500"
-                    }
+                    )}
                   />
                   <div className="text-right text-sm font-medium text-gray-500 dark:text-gray-400">
                     {budget.percentage}% used
@@ -454,3 +454,4 @@ export default function BudgetsPage() {
     </div>
   );
 }
+

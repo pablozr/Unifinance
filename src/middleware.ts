@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 import { createServerClient } from '@supabase/ssr';
+import { headers } from 'next/headers';
 
 export async function middleware(req: NextRequest) {
   let response = NextResponse.next({
@@ -74,6 +75,46 @@ export async function middleware(req: NextRequest) {
     // We've already refreshed the session above, so just return the response
     return response;
   }
+
+  // Add Content Security Policy headers
+  // Only apply strict CSP in production
+  const cspHeader = process.env.NODE_ENV === 'production'
+    ? `
+      default-src 'self';
+      script-src 'self' 'unsafe-inline' 'unsafe-eval' https://js.stripe.com;
+      style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;
+      img-src 'self' data: https://*.supabase.co https://www.gravatar.com https://*.stripe.com;
+      font-src 'self' https://fonts.gstatic.com;
+      connect-src 'self' https://*.supabase.co https://api.stripe.com;
+      frame-src 'self' https://js.stripe.com;
+      object-src 'none';
+      base-uri 'self';
+      form-action 'self';
+      frame-ancestors 'none';
+      block-all-mixed-content;
+      upgrade-insecure-requests;
+    `.replace(/\s{2,}/g, ' ').trim()
+    : // More permissive CSP for development
+    `
+      default-src 'self';
+      script-src 'self' 'unsafe-inline' 'unsafe-eval' http://localhost:* https://js.stripe.com;
+      style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;
+      img-src 'self' data: https://*.supabase.co https://www.gravatar.com https://*.stripe.com;
+      font-src 'self' https://fonts.gstatic.com;
+      connect-src 'self' http://localhost:* https://*.supabase.co https://api.stripe.com;
+      frame-src 'self' https://js.stripe.com;
+      object-src 'none';
+      base-uri 'self';
+      form-action 'self';
+    `.replace(/\s{2,}/g, ' ').trim();
+
+  // Add security headers
+  response.headers.set('Content-Security-Policy', cspHeader);
+  response.headers.set('X-Content-Type-Options', 'nosniff');
+  response.headers.set('X-Frame-Options', 'DENY');
+  response.headers.set('X-XSS-Protection', '1; mode=block');
+  response.headers.set('Referrer-Policy', 'strict-origin-when-cross-origin');
+  response.headers.set('Permissions-Policy', 'camera=(), microphone=(), geolocation=()');
 
   // Allow access to all other routes
   return response;

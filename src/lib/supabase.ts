@@ -7,10 +7,13 @@ const envSchema = z.object({
   NEXT_PUBLIC_SUPABASE_ANON_KEY: z.string().min(1),
 });
 
-// For development, we'll use the hardcoded values if environment variables are not available
-// In production, these should be set in the environment
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://hmouezjjjnwfpacxgjuu.supabase.co';
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imhtb3Vlempqam53ZnBhY3hnanV1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDY0NTkxOTEsImV4cCI6MjA2MjAzNTE5MX0.WTtlGGYci8VLwxKroczFSymb8hZQ1mYiaOsGHVleZoU';
+// Ensure environment variables are available
+if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
+  console.error('Supabase environment variables are not set. Please check your .env file.');
+}
+
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
 
 // Create Supabase client for browser with cookie support
 export const supabase = createBrowserClient(supabaseUrl, supabaseAnonKey);

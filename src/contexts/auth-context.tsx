@@ -79,8 +79,41 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  // Generate a CSRF token
+  const generateCSRFToken = () => {
+    // Generate a random string for CSRF protection
+    return Math.random().toString(36).substring(2, 15) +
+           Math.random().toString(36).substring(2, 15);
+  };
+
+  // Store CSRF token in localStorage
+  const storeCSRFToken = (token: string) => {
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('csrf_token', token);
+    }
+  };
+
+  // Get CSRF token from localStorage
+  const getCSRFToken = (): string => {
+    if (typeof window !== 'undefined') {
+      return localStorage.getItem('csrf_token') || '';
+    }
+    return '';
+  };
+
+  // Initialize CSRF token on mount
+  useEffect(() => {
+    if (!getCSRFToken()) {
+      storeCSRFToken(generateCSRFToken());
+    }
+  }, []);
+
   const signIn = async (email: string, password: string) => {
     try {
+      // Generate and store a new CSRF token on login
+      const csrfToken = generateCSRFToken();
+      storeCSRFToken(csrfToken);
+
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,

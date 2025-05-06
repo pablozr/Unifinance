@@ -14,6 +14,10 @@ import { Transaction as DBTransaction, Category as DBCategory, supabase } from '
 import { CategoryPieChart } from '@/components/dashboard/category-pie-chart';
 import { IncomeExpenseChart } from '@/components/dashboard/income-expense-chart';
 import { useTransactionModal } from '@/contexts/transaction-modal-context';
+import { EnhancedCharts } from '@/components/dashboard/enhanced-charts';
+import { SpendingPatternsCard } from '@/components/dashboard/spending-patterns-card';
+import { FinancialHealthCard } from '@/components/dashboard/financial-health-card';
+import { calculateFinancialHealth, identifyRecurringExpenses, identifyUnusualSpending } from '@/lib/financial-analysis';
 
 // Tipos para as transações na UI
 type TransactionType = 'income' | 'expense';
@@ -71,6 +75,19 @@ export default function DashboardPage() {
   const [monthlyData, setMonthlyData] = useState<{name: string; income: number; expense: number}[]>([]);
   const [categoryData, setCategoryData] = useState<{name: string; value: number; color: string}[]>([]);
 
+  // Financial analysis states
+  const [financialHealth, setFinancialHealth] = useState({
+    score: 0,
+    savingsRate: 0,
+    budgetAdherence: 100,
+    expenseToIncomeRatio: 0,
+    recommendations: ['Loading financial health data...']
+  });
+  const [spendingPatterns, setSpendingPatterns] = useState({
+    recurring: [],
+    unusual: []
+  });
+
   // Use the transaction modal context
   const {
     isAddingTransaction,
@@ -100,7 +117,7 @@ export default function DashboardPage() {
 
       // Load transactions for the selected month/year
       console.log(`Fetching transactions for ${selectedYear}/${selectedMonth}...`);
-      const transactionsData = await transactionService.getTransactions(
+      const transactionsData = await transactionService.getAllTransactions(
         user.id,
         selectedYear,
         selectedMonth
@@ -162,6 +179,22 @@ export default function DashboardPage() {
       });
 
       setCategoryData(categoryChartData);
+
+      // Calculate financial health metrics
+      console.log('Calculating financial health metrics...');
+      const healthMetrics = calculateFinancialHealth(transactionsData);
+      setFinancialHealth(healthMetrics);
+
+      // Identify spending patterns
+      console.log('Analyzing spending patterns...');
+      const recurringExpenses = identifyRecurringExpenses(transactionsData);
+      const unusualSpending = identifyUnusualSpending(transactionsData);
+
+      setSpendingPatterns({
+        recurring: recurringExpenses,
+        unusual: unusualSpending
+      });
+
       console.log('Dashboard data loaded successfully');
     } catch (error) {
       console.error('Error loading dashboard data:', error);
@@ -222,13 +255,29 @@ export default function DashboardPage() {
         return;
       }
 
+      // Get CSRF token from localStorage safely (handling SSR case)
+      let csrfToken = '';
+      if (typeof window !== 'undefined') {
+        csrfToken = localStorage.getItem('csrf_token') || '';
+
+        // If no CSRF token exists, generate one
+        if (!csrfToken) {
+          csrfToken = Math.random().toString(36).substring(2, 15) +
+                     Math.random().toString(36).substring(2, 15);
+          localStorage.setItem('csrf_token', csrfToken);
+        }
+      }
+
       // Call the API to clear all transactions
       const response = await fetch('/api/transactions/clear', {
         method: 'DELETE',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${session.access_token}`
-        }
+          'Authorization': `Bearer ${session.access_token}`,
+          'X-CSRF-Token': csrfToken
+        },
+        // Include credentials to ensure cookies are sent
+        credentials: 'include'
       });
 
       const result = await response.json();
@@ -1081,6 +1130,29 @@ export default function DashboardPage() {
         </TabsContent>
 
         <TabsContent value="analytics" className="space-y-4">
+          {/* Financial Health and Spending Patterns */}
+          <div className="grid gap-4 md:grid-cols-2">
+            {/* Financial Health Card */}
+            <FinancialHealthCard metrics={financialHealth} />
+
+            {/* Spending Patterns Card */}
+            <SpendingPatternsCard
+              patterns={spendingPatterns}
+              categories={categories}
+            />
+          </div>
+
+          {/* Enhanced Charts */}
+          <EnhancedCharts
+            monthlyData={monthlyData}
+            yearlyData={[
+              { name: (selectedYear-1).toString(), income: 0, expense: 0 },
+              { name: selectedYear.toString(), income: totalIncome, expense: totalExpenses }
+            ]}
+            categoryData={categoryData}
+          />
+
+          {/* Legacy Analytics */}
           <Card className="border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 shadow-sm">
             <CardHeader className="border-b border-gray-100 dark:border-gray-700">
               <CardTitle className="text-gray-800 dark:text-gray-200">Financial Analytics</CardTitle>

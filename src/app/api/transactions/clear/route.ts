@@ -21,6 +21,28 @@ export async function DELETE(request: NextRequest) {
     return NextResponse.json({ error: 'Bearer token is required' }, { status: 401 });
   }
 
+  // Verify CSRF protection
+  const csrfToken = request.headers.get('x-csrf-token');
+  const origin = request.headers.get('origin');
+  const referer = request.headers.get('referer');
+
+  // In production, you should validate that the origin/referer matches your domain
+  if (!csrfToken && process.env.NODE_ENV === 'production') {
+    // Check if the request is coming from our own domain
+    const allowedOrigins = [
+      process.env.NEXT_PUBLIC_APP_URL,
+      'https://unifinance.vercel.app'
+    ].filter(Boolean);
+
+    const isValidOrigin = !origin || allowedOrigins.some(allowed => origin?.startsWith(allowed || ''));
+    const isValidReferer = !referer || allowedOrigins.some(allowed => referer?.startsWith(allowed || ''));
+
+    if (!isValidOrigin && !isValidReferer) {
+      console.error('CSRF protection: Invalid origin or referer');
+      return NextResponse.json({ error: 'Invalid request origin' }, { status: 403 });
+    }
+  }
+
   console.log('Creating Supabase client with token');
 
   // Create a Supabase client with the token
@@ -50,7 +72,8 @@ export async function DELETE(request: NextRequest) {
     return NextResponse.json({ error: 'Invalid token' }, { status: 401 });
   }
 
-  console.log('User authenticated:', user.email);
+  // Log only that authentication was successful, not the email (for privacy)
+  console.log('User authenticated successfully');
   const userId = user.id;
 
   try {
