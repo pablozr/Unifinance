@@ -26,11 +26,11 @@ const renderCustomizedLabel = ({ cx, cy, midAngle, innerRadius, outerRadius, per
   if (percent < 0.05) return null;
 
   return (
-    <text 
-      x={x} 
-      y={y} 
-      fill="white" 
-      textAnchor={x > cx ? 'start' : 'end'} 
+    <text
+      x={x}
+      y={y}
+      fill="white"
+      textAnchor={x > cx ? 'start' : 'end'}
       dominantBaseline="central"
       fontSize={12}
       fontWeight="medium"
@@ -81,13 +81,13 @@ export const CategoryPieChart: React.FC<CategoryPieChartProps> = ({ data, totalA
             dataKey="value"
           >
             {data.map((entry, index) => (
-              <Cell key={`cell-${index}`} fill={entry.color} />
+              <Cell key={`cell-${entry.name}-${index}`} fill={entry.color} />
             ))}
           </Pie>
           <Tooltip content={<CustomTooltip />} />
-          <Legend 
-            layout="vertical" 
-            verticalAlign="middle" 
+          <Legend
+            layout="vertical"
+            verticalAlign="middle"
             align="right"
             formatter={(value, entry, index) => (
               <span className="text-xs text-blue-100">{value}</span>

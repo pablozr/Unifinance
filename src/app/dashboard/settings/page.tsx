@@ -39,7 +39,7 @@ export default function SettingsPage() {
     color: '#4CAF50',
     icon: 'circle',
   });
-  
+
   // Settings state
   const [settings, setSettings] = useState<UserSettings>({
     id: '',
@@ -51,11 +51,11 @@ export default function SettingsPage() {
     created_at: '',
     updated_at: '',
   });
-  
+
   // Load user settings
   const loadUserSettings = async () => {
     if (!user) return;
-    
+
     setIsLoading(true);
     try {
       // Get user settings from the database
@@ -64,20 +64,20 @@ export default function SettingsPage() {
         .select('*')
         .eq('user_id', user.id)
         .single();
-      
+
       if (error && error.code !== 'PGRST116') {
         throw error;
       }
-      
+
       // Set settings data or defaults
       if (data) {
         setSettings(data);
       }
-      
+
       // Load categories
       const userCategories = await categoryService.getUserCategories(user.id);
       setCategories(userCategories);
-      
+
     } catch (error) {
       console.error('Error loading user settings:', error);
       toast.error('Failed to load settings');
@@ -85,18 +85,18 @@ export default function SettingsPage() {
       setIsLoading(false);
     }
   };
-  
+
   // Load settings when user changes
   useEffect(() => {
     if (user) {
       loadUserSettings();
     }
   }, [user]);
-  
+
   // Handle settings update
   const handleUpdateSettings = async () => {
     if (!user) return;
-    
+
     setIsSaving(true);
     try {
       // Update settings in the database
@@ -112,18 +112,18 @@ export default function SettingsPage() {
           updated_at: new Date().toISOString(),
         })
         .select();
-      
+
       if (error) {
         throw error;
       }
-      
+
       // Update settings state with the returned data
       if (data && data.length > 0) {
         setSettings(data[0]);
       }
-      
+
       toast.success('Settings updated successfully');
-      
+
     } catch (error) {
       console.error('Error updating settings:', error);
       toast.error('Failed to update settings');
@@ -131,18 +131,18 @@ export default function SettingsPage() {
       setIsSaving(false);
     }
   };
-  
+
   // Handle adding a new category
   const handleAddCategory = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!user) return;
-    
+
     if (!newCategory.name) {
       toast.error('Category name is required');
       return;
     }
-    
+
     setIsSaving(true);
     try {
       // Create new category
@@ -157,24 +157,24 @@ export default function SettingsPage() {
           }
         ])
         .select();
-      
+
       if (error) {
         throw error;
       }
-      
+
       // Reset form
       setNewCategory({
         name: '',
         color: '#4CAF50',
         icon: 'circle',
       });
-      
+
       // Reload categories
       const userCategories = await categoryService.getUserCategories(user.id);
       setCategories(userCategories);
-      
+
       toast.success('Category added successfully');
-      
+
     } catch (error) {
       console.error('Error adding category:', error);
       toast.error('Failed to add category');
@@ -182,11 +182,11 @@ export default function SettingsPage() {
       setIsSaving(false);
     }
   };
-  
+
   // Handle deleting a category
   const handleDeleteCategory = async (categoryId: string) => {
     if (!user) return;
-    
+
     setIsSaving(true);
     try {
       // Delete category
@@ -194,17 +194,17 @@ export default function SettingsPage() {
         .from('categories')
         .delete()
         .eq('id', categoryId);
-      
+
       if (error) {
         throw error;
       }
-      
+
       // Reload categories
       const userCategories = await categoryService.getUserCategories(user.id);
       setCategories(userCategories);
-      
+
       toast.success('Category deleted successfully');
-      
+
     } catch (error) {
       console.error('Error deleting category:', error);
       toast.error('Failed to delete category');
@@ -212,7 +212,7 @@ export default function SettingsPage() {
       setIsSaving(false);
     }
   };
-  
+
   return (
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
@@ -223,7 +223,7 @@ export default function SettingsPage() {
           </p>
         </div>
       </div>
-      
+
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
         <TabsList className="grid w-full grid-cols-3 bg-gray-100 dark:bg-gray-700 rounded-lg p-1">
           <TabsTrigger value="general" className="rounded-md data-[state=active]:bg-white dark:data-[state=active]:bg-gray-800 data-[state=active]:text-gray-900 dark:data-[state=active]:text-gray-100">
@@ -236,7 +236,7 @@ export default function SettingsPage() {
             Categories
           </TabsTrigger>
         </TabsList>
-        
+
         <TabsContent value="general" className="mt-4 space-y-6">
           {/* General Settings */}
           <Card className="border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 shadow-sm">
@@ -274,7 +274,7 @@ export default function SettingsPage() {
                       </SelectContent>
                     </Select>
                   </div>
-                  
+
                   {/* Default View Setting */}
                   <div className="space-y-2">
                     <Label htmlFor="default_view" className="text-sm font-medium text-gray-700 dark:text-gray-300">
@@ -295,11 +295,11 @@ export default function SettingsPage() {
                       </SelectContent>
                     </Select>
                   </div>
-                  
+
                   {/* Notification Settings */}
                   <div className="space-y-4">
                     <h3 className="text-lg font-medium text-gray-800 dark:text-gray-200">Notifications</h3>
-                    
+
                     <div className="flex items-center justify-between">
                       <div className="space-y-0.5">
                         <Label htmlFor="notifications_enabled" className="text-sm font-medium text-gray-700 dark:text-gray-300">
@@ -315,7 +315,7 @@ export default function SettingsPage() {
                         onCheckedChange={(checked) => setSettings({ ...settings, notifications_enabled: checked })}
                       />
                     </div>
-                    
+
                     <div className="flex items-center justify-between">
                       <div className="space-y-0.5">
                         <Label htmlFor="email_notifications" className="text-sm font-medium text-gray-700 dark:text-gray-300">
@@ -333,7 +333,7 @@ export default function SettingsPage() {
                       />
                     </div>
                   </div>
-                  
+
                   <Button
                     onClick={handleUpdateSettings}
                     className="w-full bg-blue-600 hover:bg-blue-700 text-white border-0 dark:bg-blue-500 dark:hover:bg-blue-600"
@@ -346,7 +346,7 @@ export default function SettingsPage() {
             </CardContent>
           </Card>
         </TabsContent>
-        
+
         <TabsContent value="appearance" className="mt-4 space-y-6">
           {/* Appearance Settings */}
           <Card className="border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 shadow-sm">
@@ -360,7 +360,7 @@ export default function SettingsPage() {
               {/* Theme Setting */}
               <div className="space-y-4">
                 <h3 className="text-lg font-medium text-gray-800 dark:text-gray-200">Theme</h3>
-                
+
                 <div className="grid grid-cols-3 gap-4">
                   <div
                     className={`flex flex-col items-center justify-center p-4 rounded-lg border ${
@@ -396,7 +396,7 @@ export default function SettingsPage() {
                     </div>
                     <span className="text-sm font-medium text-gray-800 dark:text-gray-200">Light</span>
                   </div>
-                  
+
                   <div
                     className={`flex flex-col items-center justify-center p-4 rounded-lg border ${
                       theme === 'dark'
@@ -423,7 +423,7 @@ export default function SettingsPage() {
                     </div>
                     <span className="text-sm font-medium text-gray-800 dark:text-gray-200">Dark</span>
                   </div>
-                  
+
                   <div
                     className={`flex flex-col items-center justify-center p-4 rounded-lg border ${
                       theme === 'system'
@@ -457,7 +457,7 @@ export default function SettingsPage() {
             </CardContent>
           </Card>
         </TabsContent>
-        
+
         <TabsContent value="categories" className="mt-4 space-y-6">
           {/* Categories Management */}
           <Card className="border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 shadow-sm">
@@ -477,7 +477,7 @@ export default function SettingsPage() {
                   {/* Add New Category */}
                   <form onSubmit={handleAddCategory} className="space-y-4 p-4 border border-gray-200 dark:border-gray-700 rounded-lg">
                     <h3 className="text-lg font-medium text-gray-800 dark:text-gray-200">Add New Category</h3>
-                    
+
                     <div className="grid gap-2">
                       <Label htmlFor="category_name" className="text-sm font-medium text-gray-700 dark:text-gray-300">
                         Category Name
@@ -491,7 +491,7 @@ export default function SettingsPage() {
                         placeholder="e.g., Groceries, Entertainment"
                       />
                     </div>
-                    
+
                     <div className="grid gap-2">
                       <Label htmlFor="category_color" className="text-sm font-medium text-gray-700 dark:text-gray-300">
                         Color
@@ -510,7 +510,7 @@ export default function SettingsPage() {
                         />
                       </div>
                     </div>
-                    
+
                     <Button
                       type="submit"
                       className="w-full bg-blue-600 hover:bg-blue-700 text-white border-0 dark:bg-blue-500 dark:hover:bg-blue-600"
@@ -519,11 +519,11 @@ export default function SettingsPage() {
                       {isSaving ? 'Adding...' : 'Add Category'}
                     </Button>
                   </form>
-                  
+
                   {/* Categories List */}
                   <div className="space-y-4">
                     <h3 className="text-lg font-medium text-gray-800 dark:text-gray-200">Your Categories</h3>
-                    
+
                     {categories.length > 0 ? (
                       <div className="space-y-2">
                         {categories.map((category) => (
@@ -536,7 +536,7 @@ export default function SettingsPage() {
                                 className="h-4 w-4 rounded-full"
                                 style={{ backgroundColor: category.color }}
                               />
-                              <span className="text-gray-800 dark:text-gray-200">{category.name}</span>
+                              <span className="text-gray-800 dark:text-gray-200">{t(`categories.${category.name}`) || category.name}</span>
                             </div>
                             <Button
                               variant="ghost"

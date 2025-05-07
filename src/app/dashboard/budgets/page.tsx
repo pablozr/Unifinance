@@ -12,6 +12,7 @@ import { Transaction as DBTransaction, Category as DBCategory, supabase } from '
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Progress } from '@/components/ui/progress';
 import { cn } from '@/lib/utils';
+import { useLanguage } from '@/contexts/language-context';
 
 // Budget interface
 interface Budget {
@@ -26,6 +27,7 @@ interface Budget {
 
 export default function BudgetsPage() {
   const { user } = useAuth();
+  const { t, language } = useLanguage();
   const [isLoading, setIsLoading] = useState(true);
   const [categories, setCategories] = useState<DBCategory[]>([]);
   const [budgets, setBudgets] = useState<(Budget & { category_name: string; category_color: string; spent: number; percentage: number })[]>([]);
@@ -117,14 +119,14 @@ export default function BudgetsPage() {
     try {
       // Validate the form
       if (!newBudget.category_id || !newBudget.amount) {
-        toast.error('Please fill in all fields');
+        toast.error(language === 'pt' ? 'Por favor, preencha todos os campos' : 'Please fill in all fields');
         return;
       }
 
       // Convert amount to number
       const amount = parseFloat(newBudget.amount);
       if (isNaN(amount) || amount <= 0) {
-        toast.error('Please enter a valid amount');
+        toast.error(language === 'pt' ? 'Por favor, insira um valor válido' : 'Please enter a valid amount');
         return;
       }
 
@@ -147,7 +149,7 @@ export default function BudgetsPage() {
           throw error;
         }
 
-        toast.success('Budget updated successfully');
+        toast.success(language === 'pt' ? 'Orçamento atualizado com sucesso' : 'Budget updated successfully');
       } else {
         // Create new budget
         const { data, error } = await supabase
@@ -168,7 +170,7 @@ export default function BudgetsPage() {
           throw error;
         }
 
-        toast.success('Budget added successfully');
+        toast.success(language === 'pt' ? 'Orçamento adicionado com sucesso' : 'Budget added successfully');
       }
 
       // Close the modal and reset the form
@@ -184,7 +186,7 @@ export default function BudgetsPage() {
 
     } catch (error) {
       console.error('Error adding budget:', error);
-      toast.error('Failed to add budget');
+      toast.error(language === 'pt' ? 'Falha ao adicionar orçamento' : 'Failed to add budget');
     }
   };
 
@@ -202,14 +204,14 @@ export default function BudgetsPage() {
         throw error;
       }
 
-      toast.success('Budget deleted successfully');
+      toast.success(language === 'pt' ? 'Orçamento excluído com sucesso' : 'Budget deleted successfully');
 
       // Reload the data
       loadUserData();
 
     } catch (error) {
       console.error('Error deleting budget:', error);
-      toast.error('Failed to delete budget');
+      toast.error(language === 'pt' ? 'Falha ao excluir orçamento' : 'Failed to delete budget');
     }
   };
 
@@ -219,22 +221,26 @@ export default function BudgetsPage() {
       <Dialog open={isAddingBudget} onOpenChange={setIsAddingBudget}>
         <DialogContent className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700">
           <DialogHeader>
-            <DialogTitle className="text-gray-900 dark:text-gray-100">Add Budget</DialogTitle>
+            <DialogTitle className="text-gray-900 dark:text-gray-100">
+              {language === 'pt' ? 'Adicionar Orçamento' : 'Add Budget'}
+            </DialogTitle>
             <DialogDescription className="text-gray-600 dark:text-gray-400">
-              Set a budget for a specific category to track your spending
+              {language === 'pt'
+                ? 'Defina um orçamento para uma categoria específica para acompanhar seus gastos'
+                : 'Set a budget for a specific category to track your spending'}
             </DialogDescription>
           </DialogHeader>
           <div className="grid gap-4 py-4">
             <div className="grid gap-2">
               <label htmlFor="category" className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                Category
+                {language === 'pt' ? 'Categoria' : 'Category'}
               </label>
               <Select
                 value={newBudget.category_id}
                 onValueChange={(value) => setNewBudget({ ...newBudget, category_id: value })}
               >
                 <SelectTrigger className="border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-200">
-                  <SelectValue placeholder="Select a category" />
+                  <SelectValue placeholder={language === 'pt' ? 'Selecione uma categoria' : 'Select a category'} />
                 </SelectTrigger>
                 <SelectContent className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-800 dark:text-gray-200">
                   {categories
@@ -245,7 +251,7 @@ export default function BudgetsPage() {
                     })
                     .map(category => (
                       <SelectItem key={category.id} value={category.id}>
-                        {category.name}
+                        {t(`categories.${category.name}`) || category.name}
                       </SelectItem>
                     ))
                   }
@@ -254,7 +260,7 @@ export default function BudgetsPage() {
             </div>
             <div className="grid gap-2">
               <label htmlFor="amount" className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                Budget Amount
+                {language === 'pt' ? 'Valor do Orçamento' : 'Budget Amount'}
               </label>
               <Input
                 id="amount"
@@ -269,18 +275,18 @@ export default function BudgetsPage() {
             </div>
             <div className="grid gap-2">
               <label htmlFor="period" className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                Period
+                {language === 'pt' ? 'Período' : 'Period'}
               </label>
               <Select
                 value={newBudget.period}
                 onValueChange={(value: 'monthly' | 'yearly') => setNewBudget({ ...newBudget, period: value })}
               >
                 <SelectTrigger className="border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-200">
-                  <SelectValue placeholder="Select a period" />
+                  <SelectValue placeholder={language === 'pt' ? 'Selecione um período' : 'Select a period'} />
                 </SelectTrigger>
                 <SelectContent className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-800 dark:text-gray-200">
-                  <SelectItem value="monthly">Monthly</SelectItem>
-                  <SelectItem value="yearly">Yearly</SelectItem>
+                  <SelectItem value="monthly">{language === 'pt' ? 'Mensal' : 'Monthly'}</SelectItem>
+                  <SelectItem value="yearly">{language === 'pt' ? 'Anual' : 'Yearly'}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -292,14 +298,14 @@ export default function BudgetsPage() {
               onClick={() => setIsAddingBudget(false)}
               className="border-gray-300 dark:border-gray-600 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700"
             >
-              Cancel
+              {language === 'pt' ? 'Cancelar' : 'Cancel'}
             </Button>
             <Button
               type="button"
               onClick={(e) => handleAddBudget(e)}
               className="bg-blue-600 hover:bg-blue-700 text-white border-0 dark:bg-blue-500 dark:hover:bg-blue-600"
             >
-              Save Budget
+              {language === 'pt' ? 'Salvar Orçamento' : 'Save Budget'}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -307,9 +313,13 @@ export default function BudgetsPage() {
 
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight text-black dark:text-white">Budgets</h1>
+          <h1 className="text-3xl font-bold tracking-tight text-black dark:text-white">
+            {language === 'pt' ? 'Orçamentos' : 'Budgets'}
+          </h1>
           <p className="text-gray-600 dark:text-gray-400">
-            Set and track your spending limits for different categories
+            {language === 'pt'
+              ? 'Defina e acompanhe seus limites de gastos para diferentes categorias'
+              : 'Set and track your spending limits for different categories'}
           </p>
         </div>
         <Button
@@ -329,7 +339,7 @@ export default function BudgetsPage() {
             <path d="M12 5v14" />
             <path d="M5 12h14" />
           </svg>
-          Add Budget
+          {language === 'pt' ? 'Adicionar Orçamento' : 'Add Budget'}
         </Button>
       </div>
 
@@ -348,7 +358,7 @@ export default function BudgetsPage() {
                       className="h-3 w-3 rounded-full"
                       style={{ backgroundColor: budget.category_color }}
                     />
-                    <CardTitle className="text-lg text-gray-800 dark:text-gray-200">{budget.category_name}</CardTitle>
+                    <CardTitle className="text-lg text-gray-800 dark:text-gray-200">{t(`categories.${budget.category_name}`) || budget.category_name}</CardTitle>
                   </div>
                   <Button
                     variant="ghost"
@@ -374,17 +384,19 @@ export default function BudgetsPage() {
                   </Button>
                 </div>
                 <CardDescription className="text-gray-500 dark:text-gray-400">
-                  {budget.period === 'monthly' ? 'Monthly' : 'Yearly'} Budget
+                  {budget.period === 'monthly'
+                    ? (language === 'pt' ? 'Orçamento Mensal' : 'Monthly Budget')
+                    : (language === 'pt' ? 'Orçamento Anual' : 'Yearly Budget')}
                 </CardDescription>
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
                   <div className="flex items-center justify-between">
                     <div className="text-sm text-gray-500 dark:text-gray-400">
-                      Spent: ${budget.spent.toFixed(2)}
+                      {language === 'pt' ? 'Gasto' : 'Spent'}: ${budget.spent.toFixed(2)}
                     </div>
                     <div className="text-sm font-medium text-gray-900 dark:text-gray-100">
-                      Budget: ${budget.amount.toFixed(2)}
+                      {language === 'pt' ? 'Orçamento' : 'Budget'}: ${budget.amount.toFixed(2)}
                     </div>
                   </div>
                   <Progress
@@ -399,7 +411,7 @@ export default function BudgetsPage() {
                     )}
                   />
                   <div className="text-right text-sm font-medium text-gray-500 dark:text-gray-400">
-                    {budget.percentage}% used
+                    {budget.percentage}% {language === 'pt' ? 'utilizado' : 'used'}
                   </div>
                 </div>
               </CardContent>
@@ -425,9 +437,13 @@ export default function BudgetsPage() {
                 <path d="M18 12a2 2 0 0 0 0 4h4v-4Z" />
               </svg>
             </div>
-            <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-2">No Budgets Set</h3>
+            <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-2">
+              {language === 'pt' ? 'Nenhum Orçamento Definido' : 'No Budgets Set'}
+            </h3>
             <p className="text-gray-500 dark:text-gray-400 text-center max-w-md mb-6">
-              You haven't set any budgets yet. Create a budget to track your spending and stay on top of your finances.
+              {language === 'pt'
+                ? 'Você ainda não definiu nenhum orçamento. Crie um orçamento para acompanhar seus gastos e manter o controle de suas finanças.'
+                : 'You haven\'t set any budgets yet. Create a budget to track your spending and stay on top of your finances.'}
             </p>
             <Button
               className="bg-blue-600 hover:bg-blue-700 text-white border-0 dark:bg-blue-500 dark:hover:bg-blue-600"
@@ -446,7 +462,7 @@ export default function BudgetsPage() {
                 <path d="M12 5v14" />
                 <path d="M5 12h14" />
               </svg>
-              Create Your First Budget
+              {language === 'pt' ? 'Crie Seu Primeiro Orçamento' : 'Create Your First Budget'}
             </Button>
           </CardContent>
         </Card>

@@ -279,3 +279,6 @@
 .backface-hidden {
   backface-visibility: hidden;
 }
+
+/* Import Copilot Chat styles */
+@import '../styles/copilot-chat.css';

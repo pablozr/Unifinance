@@ -82,7 +82,7 @@ export function SpendingPatternsCard({ patterns, categories }: SpendingPatternsC
               )}
             </TabsTrigger>
           </TabsList>
-          
+
           <TabsContent value="recurring" className="mt-4">
             {patterns.recurring.length === 0 ? (
               <div className="text-center py-6 text-gray-500">
@@ -91,7 +91,7 @@ export function SpendingPatternsCard({ patterns, categories }: SpendingPatternsC
             ) : (
               <div className="space-y-3">
                 {patterns.recurring.map((pattern, index) => (
-                  <div key={index} className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
+                  <div key={`recurring-${pattern.description}-${index}`} className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
                     <div className="flex items-center space-x-3">
                       {getPatternIcon(pattern.type)}
                       <div>
@@ -114,7 +114,7 @@ export function SpendingPatternsCard({ patterns, categories }: SpendingPatternsC
               </div>
             )}
           </TabsContent>
-          
+
           <TabsContent value="unusual" className="mt-4">
             {patterns.unusual.length === 0 ? (
               <div className="text-center py-6 text-gray-500">
@@ -123,7 +123,7 @@ export function SpendingPatternsCard({ patterns, categories }: SpendingPatternsC
             ) : (
               <div className="space-y-3">
                 {patterns.unusual.map((pattern, index) => (
-                  <div key={index} className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
+                  <div key={`unusual-${pattern.description}-${index}`} className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
                     <div className="flex items-center space-x-3">
                       {getPatternIcon(pattern.type)}
                       <div>

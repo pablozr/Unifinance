@@ -1,5 +1,7 @@
 import Papa from 'papaparse';
 import { ImportedTransaction, ImportFormat } from '@/lib/import-types';
+import { CategoryClassifier } from './category-classifier';
+import { Category } from '@/lib/supabase';
 
 export const importService = {
   /**
@@ -123,27 +125,40 @@ export const importService = {
   },
 
   /**
-   * Map imported transactions to system format
+   * Map imported transactions to system format with AI-powered category classification
    */
-  mapToSystemFormat(transactions: ImportedTransaction[], categoryMap: Record<string, string>): any[] {
+  mapToSystemFormat(transactions: ImportedTransaction[], categories: Category[]): any[] {
     return transactions.map(transaction => {
-      // Try to determine category based on description
       let categoryId = '';
+      let confidence = 0;
 
-      if (transaction.category && categoryMap[transaction.category]) {
-        categoryId = categoryMap[transaction.category];
-      } else {
-        // Try to match description with known categories
-        const description = transaction.description.toLowerCase();
+      // Primeiro, verificar se a transação já tem uma categoria definida
+      if (transaction.category) {
+        // Tentar encontrar a categoria pelo nome
+        const matchedCategory = categories.find(
+          c => c.name.toLowerCase() === transaction.category?.toLowerCase()
+        );
 
-        // This is a simplified approach - in a real app, you would use
-        // more sophisticated matching or machine learning
-        for (const [keyword, id] of Object.entries(categoryMap)) {
-          if (description.includes(keyword.toLowerCase())) {
-            categoryId = id;
-            break;
-          }
+        if (matchedCategory) {
+          categoryId = matchedCategory.id;
+          confidence = 1; // Confiança máxima para categorias explicitamente definidas
         }
+      }
+
+      // Se não encontrou uma categoria, usar o classificador de IA
+      if (!categoryId) {
+        const classification = CategoryClassifier.classifyTransaction(transaction, categories);
+        categoryId = classification.categoryId;
+        confidence = classification.confidence;
+      }
+
+      // Se ainda não tiver uma categoria, usar a categoria padrão
+      if (!categoryId && categories.length > 0) {
+        const defaultCategory = transaction.type === 'income'
+          ? categories.find(c => c.name === 'Other Income')
+          : categories.find(c => c.name === 'Other Expenses');
+
+        categoryId = defaultCategory?.id || categories[0].id;
       }
 
       // Format the date safely
@@ -169,7 +184,24 @@ export const importService = {
         description: transaction.description,
         category_id: categoryId,
         date: formattedDate,
-        type: transaction.type || 'expense'
+        type: transaction.type || 'expense',
+        confidence: confidence // Adicionar a confiança para uso na interface
+      };
+    });
+  },
+
+  /**
+   * Classifica transações usando IA para sugerir categorias
+   */
+  classifyTransactions(transactions: ImportedTransaction[], categories: Category[]): any[] {
+    return transactions.map(transaction => {
+      const classification = CategoryClassifier.classifyTransaction(transaction, categories);
+
+      return {
+        ...transaction,
+        suggestedCategoryId: classification.categoryId,
+        suggestedCategoryName: classification.categoryName,
+        confidence: classification.confidence
       };
     });
   }

@@ -8,10 +8,16 @@ const nextConfig = {
         fs: false,
         path: false,
         os: false,
+        buffer: false,
+        crypto: false,
+        stream: false,
+        util: false,
       };
     }
     return config;
   },
+  // Adicionar configuração para transpilação de módulos
+  transpilePackages: ['@supabase/ssr', '@supabase/supabase-js', '@supabase/storage-js'],
 };
 
 module.exports = nextConfig;

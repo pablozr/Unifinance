@@ -13,6 +13,7 @@ import { Transaction as DBTransaction, Category as DBCategory, supabase } from '
 import { useTransactionModal } from '@/contexts/transaction-modal-context';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from '@/components/ui/pagination';
+import { useLanguage } from '@/contexts/language-context';
 
 // Tipos para as transações na UI
 type TransactionType = 'income' | 'expense';
@@ -24,6 +25,7 @@ interface Transaction extends DBTransaction {
 
 export default function TransactionsPage() {
   const { user } = useAuth();
+  const { t, language } = useLanguage();
   const searchParams = useSearchParams();
   const router = useRouter();
   const [transactions, setTransactions] = useState<Transaction[]>([]);
@@ -173,11 +175,13 @@ export default function TransactionsPage() {
       loadUserData();
 
       // Show success message
-      toast.success(`Successfully cleared ${result.count} transactions`);
+      toast.success(language === 'pt'
+        ? `${result.count} transações removidas com sucesso`
+        : `Successfully cleared ${result.count} transactions`);
 
     } catch (error) {
       console.error('Error clearing transactions:', error);
-      toast.error('Failed to clear transactions');
+      toast.error(language === 'pt' ? 'Falha ao remover transações' : 'Failed to clear transactions');
     } finally {
       setIsClearing(false);
     }
@@ -201,9 +205,13 @@ export default function TransactionsPage() {
       <Dialog open={isClearDialogOpen} onOpenChange={setIsClearDialogOpen}>
         <DialogContent className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700">
           <DialogHeader>
-            <DialogTitle className="text-gray-900 dark:text-gray-100">Clear All Transactions</DialogTitle>
+            <DialogTitle className="text-gray-900 dark:text-gray-100">
+              {language === 'pt' ? 'Limpar Todas as Transações' : 'Clear All Transactions'}
+            </DialogTitle>
             <DialogDescription className="text-gray-600 dark:text-gray-400">
-              This will permanently delete all your transactions. This action cannot be undone.
+              {language === 'pt'
+                ? 'Isso excluirá permanentemente todas as suas transações. Esta ação não pode ser desfeita.'
+                : 'This will permanently delete all your transactions. This action cannot be undone.'}
             </DialogDescription>
           </DialogHeader>
           <DialogFooter className="flex justify-between">
@@ -212,14 +220,16 @@ export default function TransactionsPage() {
               onClick={() => setIsClearDialogOpen(false)}
               className="border-gray-300 dark:border-gray-600 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700"
             >
-              Cancel
+              {language === 'pt' ? 'Cancelar' : 'Cancel'}
             </Button>
             <Button
               onClick={handleClearTransactions}
               className="bg-red-600 hover:bg-red-700 text-white border-0 dark:bg-red-700 dark:hover:bg-red-800"
               disabled={isClearing}
             >
-              {isClearing ? 'Clearing...' : 'Yes, Clear All'}
+              {isClearing
+                ? (language === 'pt' ? 'Limpando...' : 'Clearing...')
+                : (language === 'pt' ? 'Sim, Limpar Tudo' : 'Yes, Clear All')}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -227,9 +237,13 @@ export default function TransactionsPage() {
 
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight text-black dark:text-white">Transactions</h1>
+          <h1 className="text-3xl font-bold tracking-tight text-black dark:text-white">
+            {language === 'pt' ? 'Transações' : 'Transactions'}
+          </h1>
           <p className="text-gray-600 dark:text-gray-400">
-            Manage and view all your financial transactions
+            {language === 'pt'
+              ? 'Gerencie e visualize todas as suas transações financeiras'
+              : 'Manage and view all your financial transactions'}
           </p>
         </div>
       </div>
@@ -237,13 +251,15 @@ export default function TransactionsPage() {
       {/* Filters */}
       <Card className="border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 shadow-sm">
         <CardHeader className="pb-2">
-          <CardTitle className="text-xl text-gray-800 dark:text-gray-200">Filters</CardTitle>
+          <CardTitle className="text-xl text-gray-800 dark:text-gray-200">
+            {language === 'pt' ? 'Filtros' : 'Filters'}
+          </CardTitle>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSearch} className="grid gap-4 md:grid-cols-4">
             <div>
               <Input
-                placeholder="Search transactions..."
+                placeholder={language === 'pt' ? 'Buscar transações...' : 'Search transactions...'}
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-200"
@@ -252,13 +268,13 @@ export default function TransactionsPage() {
             <div>
               <Select value={categoryFilter} onValueChange={setCategoryFilter}>
                 <SelectTrigger className="border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-200">
-                  <SelectValue placeholder="Category" />
+                  <SelectValue placeholder={language === 'pt' ? 'Categoria' : 'Category'} />
                 </SelectTrigger>
                 <SelectContent className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-800 dark:text-gray-200">
-                  <SelectItem value="all">All Categories</SelectItem>
+                  <SelectItem value="all">{t('categories.allCategories')}</SelectItem>
                   {categories.map((category) => (
                     <SelectItem key={category.id} value={category.id}>
-                      {category.name}
+                      {t(`categories.${category.name}`) || category.name}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -267,18 +283,18 @@ export default function TransactionsPage() {
             <div>
               <Select value={typeFilter} onValueChange={setTypeFilter}>
                 <SelectTrigger className="border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-200">
-                  <SelectValue placeholder="Type" />
+                  <SelectValue placeholder={language === 'pt' ? 'Tipo' : 'Type'} />
                 </SelectTrigger>
                 <SelectContent className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-800 dark:text-gray-200">
-                  <SelectItem value="all">All Types</SelectItem>
-                  <SelectItem value="income">Income</SelectItem>
-                  <SelectItem value="expense">Expense</SelectItem>
+                  <SelectItem value="all">{language === 'pt' ? 'Todos os Tipos' : 'All Types'}</SelectItem>
+                  <SelectItem value="income">{language === 'pt' ? 'Receita' : 'Income'}</SelectItem>
+                  <SelectItem value="expense">{language === 'pt' ? 'Despesa' : 'Expense'}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
             <div>
               <Button type="submit" className="w-full bg-blue-600 hover:bg-blue-700 text-white border-0 dark:bg-blue-500 dark:hover:bg-blue-600">
-                Apply Filters
+                {language === 'pt' ? 'Aplicar Filtros' : 'Apply Filters'}
               </Button>
             </div>
           </form>
@@ -288,7 +304,9 @@ export default function TransactionsPage() {
       {/* Transactions List */}
       <Card className="border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 shadow-sm">
         <CardHeader className="flex flex-row items-center justify-between pb-2 pt-6">
-          <CardTitle className="text-xl text-gray-800 dark:text-gray-200">All Transactions</CardTitle>
+          <CardTitle className="text-xl text-gray-800 dark:text-gray-200">
+            {language === 'pt' ? 'Todas as Transações' : 'All Transactions'}
+          </CardTitle>
           <div className="flex items-center gap-2">
             <Button
               variant="outline"
@@ -312,7 +330,7 @@ export default function TransactionsPage() {
                 <line x1="10" x2="10" y1="11" y2="17" />
                 <line x1="14" x2="14" y1="11" y2="17" />
               </svg>
-              Clear All
+              {language === 'pt' ? 'Limpar Tudo' : 'Clear All'}
             </Button>
             <Button
               className="bg-blue-600 hover:bg-blue-700 text-white border-0 dark:bg-blue-500 dark:hover:bg-blue-600"
@@ -331,7 +349,7 @@ export default function TransactionsPage() {
                 <path d="M12 5v14" />
                 <path d="M5 12h14" />
               </svg>
-              Add Transaction
+              {language === 'pt' ? 'Adicionar Transação' : 'Add Transaction'}
             </Button>
           </div>
         </CardHeader>
@@ -345,11 +363,21 @@ export default function TransactionsPage() {
               <table className="w-full border-collapse">
                 <thead>
                   <tr className="border-b border-gray-200 dark:border-gray-700">
-                    <th className="px-4 py-3 text-left text-sm font-medium text-gray-600 dark:text-gray-400">Date</th>
-                    <th className="px-4 py-3 text-left text-sm font-medium text-gray-600 dark:text-gray-400">Description</th>
-                    <th className="px-4 py-3 text-left text-sm font-medium text-gray-600 dark:text-gray-400">Category</th>
-                    <th className="px-4 py-3 text-right text-sm font-medium text-gray-600 dark:text-gray-400">Amount</th>
-                    <th className="px-4 py-3 text-right text-sm font-medium text-gray-600 dark:text-gray-400">Actions</th>
+                    <th className="px-4 py-3 text-left text-sm font-medium text-gray-600 dark:text-gray-400">
+                      {language === 'pt' ? 'Data' : 'Date'}
+                    </th>
+                    <th className="px-4 py-3 text-left text-sm font-medium text-gray-600 dark:text-gray-400">
+                      {language === 'pt' ? 'Descrição' : 'Description'}
+                    </th>
+                    <th className="px-4 py-3 text-left text-sm font-medium text-gray-600 dark:text-gray-400">
+                      {language === 'pt' ? 'Categoria' : 'Category'}
+                    </th>
+                    <th className="px-4 py-3 text-right text-sm font-medium text-gray-600 dark:text-gray-400">
+                      {language === 'pt' ? 'Valor' : 'Amount'}
+                    </th>
+                    <th className="px-4 py-3 text-right text-sm font-medium text-gray-600 dark:text-gray-400">
+                      {language === 'pt' ? 'Ações' : 'Actions'}
+                    </th>
                   </tr>
                 </thead>
                 <tbody>
@@ -369,7 +397,7 @@ export default function TransactionsPage() {
                             color: transaction.category_color
                           }}
                         >
-                          {transaction.category_name}
+                          {t(`categories.${transaction.category_name}`) || transaction.category_name}
                         </span>
                       </td>
                       <td className={`px-4 py-3 text-sm font-medium text-right ${
@@ -392,7 +420,7 @@ export default function TransactionsPage() {
                             <path d="M12 20h9" />
                             <path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z" />
                           </svg>
-                          <span className="sr-only">Edit</span>
+                          <span className="sr-only">{language === 'pt' ? 'Editar' : 'Edit'}</span>
                         </Button>
                       </td>
                     </tr>
@@ -402,7 +430,9 @@ export default function TransactionsPage() {
             </div>
           ) : (
             <div className="py-8 text-center text-gray-500 dark:text-gray-400">
-              No transactions found. Add a transaction to get started.
+              {language === 'pt'
+                ? 'Nenhuma transação encontrada. Adicione uma transação para começar.'
+                : 'No transactions found. Add a transaction to get started.'}
             </div>
           )}
         </CardContent>

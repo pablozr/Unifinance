@@ -11,9 +11,11 @@ import { CategoryPieChart } from '@/components/dashboard/category-pie-chart';
 import { IncomeExpenseChart } from '@/components/dashboard/income-expense-chart';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { useLanguage } from '@/contexts/language-context';
 
 export default function ReportsPage() {
   const { user } = useAuth();
+  const { t, language } = useLanguage();
   const [isLoading, setIsLoading] = useState(true);
   const [transactions, setTransactions] = useState<DBTransaction[]>([]);
   const [categories, setCategories] = useState<DBCategory[]>([]);
@@ -61,7 +63,9 @@ export default function ReportsPage() {
   const processChartData = (transactions: DBTransaction[], categories: DBCategory[]) => {
     // Process monthly data
     const monthlyDataMap = new Map<string, { income: number; expense: number }>();
-    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    const months = language === 'pt'
+      ? ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez']
+      : ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
     // Initialize all months with zero values
     months.forEach((month, index) => {
@@ -171,28 +175,43 @@ export default function ReportsPage() {
   const yearOptions = Array.from({ length: 5 }, (_, i) => currentYear - i);
 
   // Generate month options
-  const monthOptions = [
-    { value: 1, label: 'January' },
-    { value: 2, label: 'February' },
-    { value: 3, label: 'March' },
-    { value: 4, label: 'April' },
-    { value: 5, label: 'May' },
-    { value: 6, label: 'June' },
-    { value: 7, label: 'July' },
-    { value: 8, label: 'August' },
-    { value: 9, label: 'September' },
-    { value: 10, label: 'October' },
-    { value: 11, label: 'November' },
-    { value: 12, label: 'December' }
-  ];
+  const monthOptions = language === 'pt'
+    ? [
+        { value: 1, label: 'Janeiro' },
+        { value: 2, label: 'Fevereiro' },
+        { value: 3, label: 'Março' },
+        { value: 4, label: 'Abril' },
+        { value: 5, label: 'Maio' },
+        { value: 6, label: 'Junho' },
+        { value: 7, label: 'Julho' },
+        { value: 8, label: 'Agosto' },
+        { value: 9, label: 'Setembro' },
+        { value: 10, label: 'Outubro' },
+        { value: 11, label: 'Novembro' },
+        { value: 12, label: 'Dezembro' }
+      ]
+    : [
+        { value: 1, label: 'January' },
+        { value: 2, label: 'February' },
+        { value: 3, label: 'March' },
+        { value: 4, label: 'April' },
+        { value: 5, label: 'May' },
+        { value: 6, label: 'June' },
+        { value: 7, label: 'July' },
+        { value: 8, label: 'August' },
+        { value: 9, label: 'September' },
+        { value: 10, label: 'October' },
+        { value: 11, label: 'November' },
+        { value: 12, label: 'December' }
+      ];
 
   return (
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight text-black dark:text-white">Financial Reports</h1>
+          <h1 className="text-3xl font-bold tracking-tight text-black dark:text-white">{t('common.reports')}</h1>
           <p className="text-gray-600 dark:text-gray-400">
-            Analyze your financial data with detailed reports and charts
+            {language === 'pt' ? 'Analise seus dados financeiros com relatórios e gráficos detalhados' : 'Analyze your financial data with detailed reports and charts'}
           </p>
         </div>
 
@@ -228,10 +247,10 @@ export default function ReportsPage() {
       <Tabs value={selectedTab} onValueChange={setSelectedTab} className="w-full">
         <TabsList className="grid w-full grid-cols-2 bg-gray-100 dark:bg-gray-700 rounded-lg p-1">
           <TabsTrigger value="monthly" className="rounded-md data-[state=active]:bg-white dark:data-[state=active]:bg-gray-800 data-[state=active]:text-gray-900 dark:data-[state=active]:text-gray-100">
-            Monthly Analysis
+            {language === 'pt' ? 'Análise Mensal' : 'Monthly Analysis'}
           </TabsTrigger>
           <TabsTrigger value="yearly" className="rounded-md data-[state=active]:bg-white dark:data-[state=active]:bg-gray-800 data-[state=active]:text-gray-900 dark:data-[state=active]:text-gray-100">
-            Yearly Analysis
+            {language === 'pt' ? 'Análise Anual' : 'Yearly Analysis'}
           </TabsTrigger>
         </TabsList>
 
@@ -239,9 +258,13 @@ export default function ReportsPage() {
           {/* Income vs Expenses Chart */}
           <Card className="border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 shadow-sm">
             <CardHeader>
-              <CardTitle className="text-xl text-gray-800 dark:text-gray-200">Monthly Income vs Expenses</CardTitle>
+              <CardTitle className="text-xl text-gray-800 dark:text-gray-200">
+                {language === 'pt' ? 'Receitas vs Despesas Mensais' : 'Monthly Income vs Expenses'}
+              </CardTitle>
               <CardDescription className="text-gray-500 dark:text-gray-400">
-                Compare your monthly income and expenses for {selectedYear}
+                {language === 'pt'
+                  ? `Compare suas receitas e despesas mensais para ${selectedYear}`
+                  : `Compare your monthly income and expenses for ${selectedYear}`}
               </CardDescription>
             </CardHeader>
             <CardContent className="h-80">
@@ -258,9 +281,13 @@ export default function ReportsPage() {
           {/* Expense Categories Chart */}
           <Card className="border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 shadow-sm">
             <CardHeader>
-              <CardTitle className="text-xl text-gray-800 dark:text-gray-200">Expense Categories</CardTitle>
+              <CardTitle className="text-xl text-gray-800 dark:text-gray-200">
+                {language === 'pt' ? 'Categorias de Despesas' : 'Expense Categories'}
+              </CardTitle>
               <CardDescription className="text-gray-500 dark:text-gray-400">
-                Breakdown of expenses by category for {monthOptions.find(m => m.value === selectedMonth)?.label} {selectedYear}
+                {language === 'pt'
+                  ? `Detalhamento de despesas por categoria para ${monthOptions.find(m => m.value === selectedMonth)?.label} ${selectedYear}`
+                  : `Breakdown of expenses by category for ${monthOptions.find(m => m.value === selectedMonth)?.label} ${selectedYear}`}
               </CardDescription>
             </CardHeader>
             <CardContent className="h-80">
@@ -272,7 +299,9 @@ export default function ReportsPage() {
                 <CategoryPieChart data={categoryData} />
               ) : (
                 <div className="flex h-full items-center justify-center text-gray-500 dark:text-gray-400">
-                  No expense data available for this period
+                  {language === 'pt'
+                    ? 'Não há dados de despesas disponíveis para este período'
+                    : 'No expense data available for this period'}
                 </div>
               )}
             </CardContent>
@@ -283,9 +312,13 @@ export default function ReportsPage() {
           {/* Yearly Income vs Expenses Chart */}
           <Card className="border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 shadow-sm">
             <CardHeader>
-              <CardTitle className="text-xl text-gray-800 dark:text-gray-200">Yearly Income vs Expenses</CardTitle>
+              <CardTitle className="text-xl text-gray-800 dark:text-gray-200">
+                {language === 'pt' ? 'Receitas vs Despesas Anuais' : 'Yearly Income vs Expenses'}
+              </CardTitle>
               <CardDescription className="text-gray-500 dark:text-gray-400">
-                Compare your yearly income and expenses for the past 5 years
+                {language === 'pt'
+                  ? 'Compare suas receitas e despesas anuais dos últimos 5 anos'
+                  : 'Compare your yearly income and expenses for the past 5 years'}
               </CardDescription>
             </CardHeader>
             <CardContent className="h-80">
@@ -302,9 +335,13 @@ export default function ReportsPage() {
           {/* Annual Summary */}
           <Card className="border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 shadow-sm">
             <CardHeader>
-              <CardTitle className="text-xl text-gray-800 dark:text-gray-200">Annual Summary</CardTitle>
+              <CardTitle className="text-xl text-gray-800 dark:text-gray-200">
+                {language === 'pt' ? 'Resumo Anual' : 'Annual Summary'}
+              </CardTitle>
               <CardDescription className="text-gray-500 dark:text-gray-400">
-                Financial summary for {selectedYear}
+                {language === 'pt'
+                  ? `Resumo financeiro para ${selectedYear}`
+                  : `Financial summary for ${selectedYear}`}
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -315,19 +352,25 @@ export default function ReportsPage() {
               ) : (
                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
                   <div className="rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-700 p-4">
-                    <div className="text-sm font-medium text-gray-500 dark:text-gray-400">Total Income</div>
+                    <div className="text-sm font-medium text-gray-500 dark:text-gray-400">
+                      {language === 'pt' ? 'Receita Total' : 'Total Income'}
+                    </div>
                     <div className="mt-1 text-2xl font-bold text-green-600 dark:text-green-400">
                       ${yearlyData.find(d => d.name === selectedYear.toString())?.income.toFixed(2) || '0.00'}
                     </div>
                   </div>
                   <div className="rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-700 p-4">
-                    <div className="text-sm font-medium text-gray-500 dark:text-gray-400">Total Expenses</div>
+                    <div className="text-sm font-medium text-gray-500 dark:text-gray-400">
+                      {language === 'pt' ? 'Despesas Totais' : 'Total Expenses'}
+                    </div>
                     <div className="mt-1 text-2xl font-bold text-red-600 dark:text-red-400">
                       ${yearlyData.find(d => d.name === selectedYear.toString())?.expense.toFixed(2) || '0.00'}
                     </div>
                   </div>
                   <div className="rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-700 p-4">
-                    <div className="text-sm font-medium text-gray-500 dark:text-gray-400">Net Savings</div>
+                    <div className="text-sm font-medium text-gray-500 dark:text-gray-400">
+                      {language === 'pt' ? 'Economia Líquida' : 'Net Savings'}
+                    </div>
                     <div className="mt-1 text-2xl font-bold text-blue-600 dark:text-blue-400">
                       ${(
                         (yearlyData.find(d => d.name === selectedYear.toString())?.income || 0) -

@@ -1,0 +1,377 @@
+/* Custom styles for Copilot Chat */
+
+/* Override default styles to match our theme */
+.copilot-chat-container {
+  --copilot-chat-primary-color: var(--primary);
+  --copilot-chat-secondary-color: var(--secondary);
+  --copilot-chat-background-color: var(--background);
+  --copilot-chat-text-color: var(--foreground);
+  --copilot-chat-border-color: var(--border);
+  border-radius: var(--radius);
+  font-family: var(--font-geist-sans);
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Improved styling for CopilotKit components */
+div[class*="CopilotChat_container"] {
+  font-family: var(--font-geist-sans) !important;
+  font-size: 0.95rem !important;
+  line-height: 1.5 !important;
+}
+
+/* Improve message bubbles */
+div[class*="CopilotChat_message"] {
+  padding: 12px 16px !important;
+  border-radius: 12px !important;
+  margin-bottom: 12px !important;
+  max-width: 85% !important;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05) !important;
+}
+
+/* User messages */
+div[class*="CopilotChat_userMessage"] {
+  background-color: #2563eb !important;
+  color: white !important;
+  border-bottom-right-radius: 4px !important;
+}
+
+/* Assistant messages */
+div[class*="CopilotChat_assistantMessage"] {
+  background-color: #f3f4f6 !important;
+  color: #1f2937 !important;
+  border-bottom-left-radius: 4px !important;
+}
+
+/* Dark mode assistant messages */
+.dark div[class*="CopilotChat_assistantMessage"] {
+  background-color: #374151 !important;
+  color: #f9fafb !important;
+}
+
+/* Garantir que a área de mensagens tenha rolagem */
+.copilot-chat-messages,
+div[class*="CopilotChat_messages"] {
+  flex: 1 !important;
+  overflow-y: auto !important;
+  padding: 1rem;
+  scroll-behavior: smooth;
+  height: auto !important;
+  max-height: none !important;
+  overflow-x: hidden !important;
+}
+
+/* Estilizar a barra de rolagem */
+.copilot-chat-messages::-webkit-scrollbar,
+div[class*="CopilotChat_messages"]::-webkit-scrollbar {
+  width: 6px;
+}
+
+.copilot-chat-messages::-webkit-scrollbar-track,
+div[class*="CopilotChat_messages"]::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.copilot-chat-messages::-webkit-scrollbar-thumb,
+div[class*="CopilotChat_messages"]::-webkit-scrollbar-thumb {
+  background-color: rgba(0, 0, 0, 0.2);
+  border-radius: 3px;
+}
+
+.dark .copilot-chat-messages::-webkit-scrollbar-thumb,
+.dark div[class*="CopilotChat_messages"]::-webkit-scrollbar-thumb {
+  background-color: rgba(255, 255, 255, 0.2);
+}
+
+/* Dark theme overrides */
+.copilot-dark-theme {
+  --copilot-chat-background-color: var(--card);
+  --copilot-chat-text-color: var(--card-foreground);
+}
+
+/* Message bubbles */
+.copilot-chat-message-bubble {
+  border-radius: var(--radius);
+  padding: 0.75rem 1rem;
+  max-width: 85%;
+  margin-bottom: 0.5rem;
+}
+
+.copilot-chat-user-message {
+  background-color: var(--primary);
+  color: var(--primary-foreground);
+  align-self: flex-end;
+}
+
+.copilot-chat-assistant-message {
+  background-color: var(--secondary);
+  color: var(--secondary-foreground);
+  align-self: flex-start;
+}
+
+/* Input area */
+.copilot-chat-input-container {
+  border-top: 1px solid var(--border);
+  padding: 0.75rem;
+  background-color: var(--background);
+}
+
+/* Fix for CopilotChat component */
+div[class*="CopilotChat_container"] {
+  height: 100% !important;
+  max-height: none !important;
+  display: flex !important;
+  flex-direction: column !important;
+  overflow: hidden !important;
+}
+
+/* Improve input area */
+div[class*="CopilotChat_inputContainer"] {
+  padding: 12px !important;
+  border-top: 1px solid #e5e7eb !important;
+  background-color: white !important;
+}
+
+.dark div[class*="CopilotChat_inputContainer"] {
+  border-top: 1px solid #374151 !important;
+  background-color: #1f2937 !important;
+}
+
+/* Improve input field */
+div[class*="CopilotChat_inputContainer"] textarea {
+  border: 1px solid #e5e7eb !important;
+  border-radius: 8px !important;
+  padding: 10px 14px !important;
+  font-size: 0.95rem !important;
+  background-color: white !important;
+  color: #1f2937 !important;
+  transition: border-color 0.2s ease-in-out !important;
+}
+
+.dark div[class*="CopilotChat_inputContainer"] textarea {
+  border: 1px solid #374151 !important;
+  background-color: #111827 !important;
+  color: #f9fafb !important;
+}
+
+div[class*="CopilotChat_inputContainer"] textarea:focus {
+  border-color: #3b82f6 !important;
+  outline: none !important;
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2) !important;
+}
+
+/* Improve send button */
+div[class*="CopilotChat_sendButton"] {
+  background-color: #2563eb !important;
+  border-radius: 8px !important;
+  padding: 8px !important;
+  transition: background-color 0.2s ease-in-out !important;
+}
+
+div[class*="CopilotChat_sendButton"]:hover {
+  background-color: #1d4ed8 !important;
+}
+
+div[class*="CopilotChat_messagesContainer"] {
+  flex: 1 !important;
+  overflow-y: auto !important;
+  padding-bottom: 20px !important;
+  height: auto !important;
+  min-height: 300px !important;
+}
+
+/* Custom class for CopilotChat */
+.copilot-chat-custom {
+  height: 100% !important;
+  display: flex !important;
+  flex-direction: column !important;
+  overflow: hidden !important;
+  position: relative !important;
+  flex: 1 !important;
+}
+
+.copilot-chat-custom > div {
+  height: 100% !important;
+  display: flex !important;
+  flex-direction: column !important;
+}
+
+.copilot-chat-custom div[class*="CopilotChat_messagesContainer"] {
+  flex: 1 !important;
+  overflow-y: auto !important;
+  max-height: none !important;
+  height: auto !important;
+  min-height: 300px !important;
+}
+
+.copilot-chat-input {
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 0.5rem 1rem;
+  font-size: 0.875rem;
+  background-color: var(--background);
+  color: var(--foreground);
+}
+
+.copilot-chat-input:focus {
+  outline: none;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 2px var(--primary-foreground);
+}
+
+.copilot-chat-send-button {
+  background-color: var(--primary);
+  color: var(--primary-foreground);
+  border-radius: var(--radius);
+  padding: 0.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.copilot-chat-send-button:hover {
+  background-color: var(--primary-foreground);
+  color: var(--primary);
+}
+
+/* Language toggle button hover effect */
+.language-toggle-btn {
+  transition: transform 0.2s ease-in-out;
+}
+
+.language-toggle-btn:hover {
+  transform: rotate(20deg);
+}
+
+/* Language indicator */
+.language-indicator {
+  font-size: 0.75rem;
+  font-weight: 500;
+  padding: 0.125rem 0.375rem;
+  border-radius: var(--radius);
+  background-color: var(--primary-foreground);
+  color: var(--primary);
+  position: absolute;
+  top: 0.5rem;
+  right: 0.5rem;
+  opacity: 0.8;
+  z-index: 10;
+}
+
+/* Improve code blocks in chat */
+div[class*="CopilotChat_assistantMessage"] pre {
+  background-color: #1e293b !important;
+  color: #e2e8f0 !important;
+  border-radius: 6px !important;
+  padding: 12px !important;
+  margin: 8px 0 !important;
+  overflow-x: auto !important;
+  font-family: 'Menlo', 'Monaco', 'Courier New', monospace !important;
+  font-size: 0.85rem !important;
+  line-height: 1.5 !important;
+}
+
+/* Ocultar chamadas de função no chat */
+div[class*="CopilotChat_message"] code:not([class*="language-"]) {
+  display: none !important;
+}
+
+/* Ocultar mensagens do sistema */
+div[class*="CopilotChat_systemMessage"] {
+  display: none !important;
+}
+
+/* Improve tables in chat */
+div[class*="CopilotChat_assistantMessage"] table {
+  width: 100% !important;
+  border-collapse: collapse !important;
+  margin: 12px 0 !important;
+  font-size: 0.9rem !important;
+}
+
+div[class*="CopilotChat_assistantMessage"] th,
+div[class*="CopilotChat_assistantMessage"] td {
+  border: 1px solid #e5e7eb !important;
+  padding: 8px 12px !important;
+  text-align: left !important;
+}
+
+.dark div[class*="CopilotChat_assistantMessage"] th,
+.dark div[class*="CopilotChat_assistantMessage"] td {
+  border-color: #374151 !important;
+}
+
+div[class*="CopilotChat_assistantMessage"] th {
+  background-color: #f3f4f6 !important;
+  font-weight: 600 !important;
+}
+
+.dark div[class*="CopilotChat_assistantMessage"] th {
+  background-color: #374151 !important;
+}
+
+/* Improve lists in chat */
+div[class*="CopilotChat_assistantMessage"] ul,
+div[class*="CopilotChat_assistantMessage"] ol {
+  padding-left: 24px !important;
+  margin: 8px 0 !important;
+}
+
+div[class*="CopilotChat_assistantMessage"] li {
+  margin-bottom: 4px !important;
+}
+
+/* Animations */
+@keyframes slideUp {
+  from {
+    transform: translateY(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes pulse {
+  0% {
+    opacity: 0.6;
+  }
+  50% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0.6;
+  }
+}
+
+.chat-animation-enter {
+  animation: slideUp 0.3s ease-out forwards;
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.5s ease-out forwards;
+}
+
+.animate-pulse {
+  animation: pulse 2s infinite ease-in-out;
+}
+
+/* Improved responsiveness */
+@media (max-width: 640px) {
+  .copilot-chat-container {
+    width: 100%;
+    height: 100%;
+    border-radius: 0;
+  }
+}

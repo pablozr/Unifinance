@@ -85,7 +85,7 @@ export async function middleware(req: NextRequest) {
       style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;
       img-src 'self' data: https://*.supabase.co https://www.gravatar.com https://*.stripe.com;
       font-src 'self' https://fonts.gstatic.com;
-      connect-src 'self' https://*.supabase.co https://api.stripe.com;
+      connect-src 'self' https://*.supabase.co https://api.stripe.com https://api.cloud.copilotkit.ai;
       frame-src 'self' https://js.stripe.com;
       object-src 'none';
       base-uri 'self';
@@ -101,7 +101,7 @@ export async function middleware(req: NextRequest) {
       style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;
       img-src 'self' data: https://*.supabase.co https://www.gravatar.com https://*.stripe.com;
       font-src 'self' https://fonts.gstatic.com;
-      connect-src 'self' http://localhost:* https://*.supabase.co https://api.stripe.com;
+      connect-src 'self' http://localhost:* https://*.supabase.co https://api.stripe.com https://api.cloud.copilotkit.ai;
       frame-src 'self' https://js.stripe.com;
       object-src 'none';
       base-uri 'self';

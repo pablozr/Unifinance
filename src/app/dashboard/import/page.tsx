@@ -13,6 +13,7 @@ import { importService } from '@/services/import-service';
 import { ImportedTransaction, BANK_TEMPLATES } from '@/lib/import-types';
 import { supabase } from '@/lib/supabase';
 import { categoryService, transactionService } from '@/services';
+import { useLanguage } from '@/contexts/language-context';
 
 // Simplified category interface for import page
 interface Category {
@@ -25,6 +26,7 @@ interface Category {
 
 export default function ImportPage() {
   const { user } = useAuth();
+  const { t, language } = useLanguage();
 
   // State for the import process
   const [importStep, setImportStep] = useState<'upload' | 'mapping' | 'importing' | 'complete'>('upload');
@@ -187,7 +189,7 @@ export default function ImportPage() {
     const fileExtension = selectedFile.name.split('.').pop()?.toLowerCase();
 
     if (fileExtension !== 'csv') {
-      toast.error('Please upload a CSV file');
+      toast.error(language === 'pt' ? 'Por favor, envie um arquivo CSV' : 'Please upload a CSV file');
       return;
     }
 
@@ -203,16 +205,26 @@ export default function ImportPage() {
       // Normalize transactions
       try {
         const normalizedTransactions = importService.normalizeTransactions(transactions, format);
+
+        // Adicionar mensagem sobre a classificação automática
+        toast.success(language === 'pt'
+          ? 'Transações carregadas com sucesso! Usando IA para sugerir categorias...'
+          : 'Transactions loaded successfully! Using AI to suggest categories...');
+
         setImportedTransactions(normalizedTransactions);
         setImportStep('mapping');
       } catch (normalizeError) {
         console.error('Error normalizing transactions:', normalizeError);
-        toast.error('Error processing transactions. Please try a different file or format.');
+        toast.error(language === 'pt'
+          ? 'Erro ao processar transações. Por favor, tente um arquivo ou formato diferente.'
+          : 'Error processing transactions. Please try a different file or format.');
         throw normalizeError;
       }
     } catch (error) {
       console.error('Error parsing file:', error);
-      toast.error('There was an error reading your file. Please check the format and try again.');
+      toast.error(language === 'pt'
+        ? 'Ocorreu um erro ao ler seu arquivo. Por favor, verifique o formato e tente novamente.'
+        : 'There was an error reading your file. Please check the format and try again.');
     } finally {
       setIsLoading(false);
     }
@@ -221,7 +233,9 @@ export default function ImportPage() {
   // Handle import confirmation
   const handleImportConfirm = async (mappedTransactions: any[]) => {
     if (!user) {
-      toast.error('You must be logged in to import transactions');
+      toast.error(language === 'pt'
+        ? 'Você precisa estar logado para importar transações'
+        : 'You must be logged in to import transactions');
       return;
     }
 
@@ -240,7 +254,9 @@ export default function ImportPage() {
         token = data.session?.access_token || '';
 
         if (!token) {
-          toast.error('Authentication error. Please log out and log back in.');
+          toast.error(language === 'pt'
+            ? 'Erro de autenticação. Por favor, saia e faça login novamente.'
+            : 'Authentication error. Please log out and log back in.');
           setImportStep('mapping');
           setIsLoading(false);
           return;
@@ -249,7 +265,9 @@ export default function ImportPage() {
         console.log('Using current session token for import');
       } catch (tokenError) {
         console.error('Error getting session token:', tokenError);
-        toast.error('Authentication failed. Please try logging out and back in.');
+        toast.error(language === 'pt'
+          ? 'Falha na autenticação. Por favor, tente sair e entrar novamente.'
+          : 'Authentication failed. Please try logging out and back in.');
         setImportStep('mapping');
         setIsLoading(false);
         return;
@@ -284,7 +302,9 @@ export default function ImportPage() {
       console.log('Validated transactions:', validTransactions.length, 'of', mappedTransactions.length);
 
       if (validTransactions.length === 0) {
-        toast.error('No valid transactions to import');
+        toast.error(language === 'pt'
+          ? 'Não há transações válidas para importar'
+          : 'No valid transactions to import');
         setImportStep('mapping');
         setIsLoading(false);
         return;
@@ -312,24 +332,32 @@ export default function ImportPage() {
 
         // Check for specific error types
         if (response.status === 401) {
-          toast.error('Authentication error. Please log out and log back in.');
+          toast.error(language === 'pt'
+            ? 'Erro de autenticação. Por favor, saia e faça login novamente.'
+            : 'Authentication error. Please log out and log back in.');
         } else if (response.status === 404) {
-          toast.error('Resource not found. Database tables may not be set up correctly.');
+          toast.error(language === 'pt'
+            ? 'Recurso não encontrado. As tabelas do banco de dados podem não estar configuradas corretamente.'
+            : 'Resource not found. Database tables may not be set up correctly.');
         } else if (response.status === 400 && errorData.error) {
           // Handle validation errors
           if (Array.isArray(errorData.error)) {
             // If it's an array of errors, show the first one
-            toast.error(`Validation error: ${errorData.error[0]?.message || 'Invalid data'}`);
+            toast.error(language === 'pt'
+              ? `Erro de validação: ${errorData.error[0]?.message || 'Dados inválidos'}`
+              : `Validation error: ${errorData.error[0]?.message || 'Invalid data'}`);
             console.error('Validation errors:', errorData.error);
           } else if (typeof errorData.error === 'object') {
             // If it's an object, convert to string
-            toast.error(`Error: ${JSON.stringify(errorData.error)}`);
+            toast.error(`${language === 'pt' ? 'Erro' : 'Error'}: ${JSON.stringify(errorData.error)}`);
           } else {
             // If it's a string or other primitive
-            toast.error(`Error: ${errorData.error}`);
+            toast.error(`${language === 'pt' ? 'Erro' : 'Error'}: ${errorData.error}`);
           }
         } else {
-          toast.error('Failed to import transactions');
+          toast.error(language === 'pt'
+            ? 'Falha ao importar transações'
+            : 'Failed to import transactions');
         }
 
         setImportStep('mapping');
@@ -347,9 +375,13 @@ export default function ImportPage() {
         });
 
         if (result.updated > 0) {
-          toast.success(`Successfully processed ${result.total} transactions (${result.inserted} new, ${result.updated} updated)`);
+          toast.success(language === 'pt'
+            ? `Processadas com sucesso ${result.total} transações (${result.inserted} novas, ${result.updated} atualizadas)`
+            : `Successfully processed ${result.total} transactions (${result.inserted} new, ${result.updated} updated)`);
         } else {
-          toast.success(`Successfully imported ${result.inserted} transactions`);
+          toast.success(language === 'pt'
+            ? `Importadas com sucesso ${result.inserted} transações`
+            : `Successfully imported ${result.inserted} transactions`);
         }
 
         // Get the month and year from the imported transactions
@@ -396,7 +428,9 @@ export default function ImportPage() {
       }
     } catch (error) {
       console.error('Error importing transactions:', error);
-      toast.error(error instanceof Error ? error.message : 'Failed to import transactions');
+      toast.error(error instanceof Error
+        ? error.message
+        : (language === 'pt' ? 'Falha ao importar transações' : 'Failed to import transactions'));
       setImportStep('mapping');
     } finally {
       setIsLoading(false);
@@ -418,9 +452,13 @@ export default function ImportPage() {
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight text-gray-800 dark:text-gray-200">Import Transactions</h1>
+          <h1 className="text-3xl font-bold tracking-tight text-gray-800 dark:text-gray-200">
+            {language === 'pt' ? 'Importar Transações' : 'Import Transactions'}
+          </h1>
           <p className="text-gray-500 dark:text-gray-400">
-            Import transactions from your bank statements
+            {language === 'pt'
+              ? 'Importe transações dos seus extratos bancários'
+              : 'Import transactions from your bank statements'}
           </p>
         </div>
         <Button
@@ -440,17 +478,17 @@ export default function ImportPage() {
           >
             <path d="m15 18-6-6 6-6" />
           </svg>
-          Back to Dashboard
+          {language === 'pt' ? 'Voltar ao Painel' : 'Back to Dashboard'}
         </Button>
       </div>
 
       <Tabs defaultValue="import" className="space-y-4">
         <TabsList className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-400">
           <TabsTrigger value="import" className="data-[state=active]:bg-blue-600 data-[state=active]:text-white">
-            Import
+            {language === 'pt' ? 'Importar' : 'Import'}
           </TabsTrigger>
           <TabsTrigger value="help" className="data-[state=active]:bg-blue-600 data-[state=active]:text-white">
-            Help
+            {language === 'pt' ? 'Ajuda' : 'Help'}
           </TabsTrigger>
         </TabsList>
 
@@ -459,9 +497,13 @@ export default function ImportPage() {
             <>
               <Card className="border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 shadow-sm mb-4">
                 <CardHeader className="border-b border-gray-100 dark:border-gray-700">
-                  <CardTitle className="text-gray-800 dark:text-gray-200 text-lg">Select Bank Template</CardTitle>
+                  <CardTitle className="text-gray-800 dark:text-gray-200 text-lg">
+                    {language === 'pt' ? 'Selecione o Modelo do Banco' : 'Select Bank Template'}
+                  </CardTitle>
                   <CardDescription className="text-gray-500 dark:text-gray-400">
-                    Choose the bank template that matches your statement format
+                    {language === 'pt'
+                      ? 'Escolha o modelo de banco que corresponde ao formato do seu extrato'
+                      : 'Choose the bank template that matches your statement format'}
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="pt-4">
@@ -478,7 +520,9 @@ export default function ImportPage() {
                       >
                         <div className="font-medium text-gray-800 dark:text-gray-200 mb-1">{template.name}</div>
                         <div className="text-xs text-gray-500 dark:text-gray-400">
-                          {template.id === 'custom' ? 'Custom format' : 'Pre-configured format'}
+                          {template.id === 'custom'
+                            ? (language === 'pt' ? 'Formato personalizado' : 'Custom format')
+                            : (language === 'pt' ? 'Formato pré-configurado' : 'Pre-configured format')}
                         </div>
                       </div>
                     ))}
@@ -490,7 +534,9 @@ export default function ImportPage() {
                 <Card className="border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 shadow-sm">
                   <CardContent className="flex flex-col items-center justify-center py-12">
                     <div className="h-12 w-12 rounded-full border-4 border-t-blue-500 border-blue-200 dark:border-blue-400 dark:border-gray-600 animate-spin mb-4"></div>
-                    <p className="text-gray-800 dark:text-gray-200 font-medium">Processing file...</p>
+                    <p className="text-gray-800 dark:text-gray-200 font-medium">
+                      {language === 'pt' ? 'Processando arquivo...' : 'Processing file...'}
+                    </p>
                   </CardContent>
                 </Card>
               ) : (

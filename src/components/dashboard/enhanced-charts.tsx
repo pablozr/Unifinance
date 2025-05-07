@@ -2,14 +2,14 @@
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { 
-  BarChart, 
-  Bar, 
-  XAxis, 
-  YAxis, 
-  CartesianGrid, 
-  Tooltip as RechartsTooltip, 
-  Legend, 
+import {
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip as RechartsTooltip,
+  Legend,
   ResponsiveContainer,
   PieChart,
   Pie,
@@ -22,6 +22,7 @@ import {
 import { formatCurrency } from '@/lib/utils';
 import { useState } from 'react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { useLanguage } from '@/contexts/language-context';
 
 interface ChartData {
   name: string;
@@ -39,44 +40,45 @@ interface EnhancedChartsProps {
 
 export function EnhancedCharts({ monthlyData, yearlyData, categoryData }: EnhancedChartsProps) {
   const [chartType, setChartType] = useState<'bar' | 'area' | 'line'>('bar');
-  
+  const { t } = useLanguage();
+
   // Custom tooltip formatter for currency values
   const currencyFormatter = (value: number) => formatCurrency(value);
-  
+
   // Generate colors for pie chart if not provided
   const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884D8', '#82CA9D', '#FFC658', '#8DD1E1'];
-  
+
   return (
     <Card className="shadow-md">
       <CardHeader className="pb-2">
         <div className="flex justify-between items-center">
-          <CardTitle className="text-xl font-bold">Financial Overview</CardTitle>
+          <CardTitle className="text-xl font-bold">{t('charts.financialOverview')}</CardTitle>
           <Select
             value={chartType}
             onValueChange={(value: 'bar' | 'area' | 'line') => setChartType(value)}
           >
             <SelectTrigger className="w-[120px]">
-              <SelectValue placeholder="Chart Type" />
+              <SelectValue placeholder={t('charts.chartType')} />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="bar">Bar Chart</SelectItem>
-              <SelectItem value="area">Area Chart</SelectItem>
-              <SelectItem value="line">Line Chart</SelectItem>
+              <SelectItem value="bar">{t('charts.barChart')}</SelectItem>
+              <SelectItem value="area">{t('charts.areaChart')}</SelectItem>
+              <SelectItem value="line">{t('charts.lineChart')}</SelectItem>
             </SelectContent>
           </Select>
         </div>
         <CardDescription>
-          Interactive visualization of your financial data
+          {t('charts.interactiveVisualization')}
         </CardDescription>
       </CardHeader>
       <CardContent>
         <Tabs defaultValue="monthly" className="w-full">
           <TabsList className="grid w-full grid-cols-3">
-            <TabsTrigger value="monthly">Monthly</TabsTrigger>
-            <TabsTrigger value="yearly">Yearly</TabsTrigger>
-            <TabsTrigger value="category">By Category</TabsTrigger>
+            <TabsTrigger value="monthly">{t('charts.monthly')}</TabsTrigger>
+            <TabsTrigger value="yearly">{t('charts.yearly')}</TabsTrigger>
+            <TabsTrigger value="category">{t('charts.byCategory')}</TabsTrigger>
           </TabsList>
-          
+
           <TabsContent value="monthly" className="mt-4">
             <div className="h-80">
               <ResponsiveContainer width="100%" height="100%">
@@ -88,16 +90,16 @@ export function EnhancedCharts({ monthlyData, yearlyData, categoryData }: Enhanc
                     <CartesianGrid strokeDasharray="3 3" />
                     <XAxis dataKey="name" />
                     <YAxis tickFormatter={currencyFormatter} />
-                    <RechartsTooltip 
+                    <RechartsTooltip
                       formatter={currencyFormatter}
-                      labelFormatter={(label) => `Month: ${label}`}
+                      labelFormatter={(label) => `${t('charts.month')}: ${label}`}
                     />
                     <Legend />
-                    <Bar dataKey="income" fill="#4CAF50" name="Income" />
-                    <Bar dataKey="expense" fill="#F44336" name="Expense" />
+                    <Bar dataKey="income" fill="#4CAF50" name={t('dashboard.income')} />
+                    <Bar dataKey="expense" fill="#F44336" name={t('dashboard.expenses')} />
                   </BarChart>
                 )}
-                
+
                 {chartType === 'area' && (
                   <AreaChart
                     data={monthlyData}
@@ -106,16 +108,16 @@ export function EnhancedCharts({ monthlyData, yearlyData, categoryData }: Enhanc
                     <CartesianGrid strokeDasharray="3 3" />
                     <XAxis dataKey="name" />
                     <YAxis tickFormatter={currencyFormatter} />
-                    <RechartsTooltip 
+                    <RechartsTooltip
                       formatter={currencyFormatter}
-                      labelFormatter={(label) => `Month: ${label}`}
+                      labelFormatter={(label) => `${t('charts.month')}: ${label}`}
                     />
                     <Legend />
-                    <Area type="monotone" dataKey="income" stackId="1" stroke="#4CAF50" fill="#4CAF50" name="Income" />
-                    <Area type="monotone" dataKey="expense" stackId="2" stroke="#F44336" fill="#F44336" name="Expense" />
+                    <Area type="monotone" dataKey="income" stackId="1" stroke="#4CAF50" fill="#4CAF50" name={t('dashboard.income')} />
+                    <Area type="monotone" dataKey="expense" stackId="2" stroke="#F44336" fill="#F44336" name={t('dashboard.expenses')} />
                   </AreaChart>
                 )}
-                
+
                 {chartType === 'line' && (
                   <LineChart
                     data={monthlyData}
@@ -124,19 +126,19 @@ export function EnhancedCharts({ monthlyData, yearlyData, categoryData }: Enhanc
                     <CartesianGrid strokeDasharray="3 3" />
                     <XAxis dataKey="name" />
                     <YAxis tickFormatter={currencyFormatter} />
-                    <RechartsTooltip 
+                    <RechartsTooltip
                       formatter={currencyFormatter}
-                      labelFormatter={(label) => `Month: ${label}`}
+                      labelFormatter={(label) => `${t('charts.month')}: ${label}`}
                     />
                     <Legend />
-                    <Line type="monotone" dataKey="income" stroke="#4CAF50" name="Income" />
-                    <Line type="monotone" dataKey="expense" stroke="#F44336" name="Expense" />
+                    <Line type="monotone" dataKey="income" stroke="#4CAF50" name={t('dashboard.income')} />
+                    <Line type="monotone" dataKey="expense" stroke="#F44336" name={t('dashboard.expenses')} />
                   </LineChart>
                 )}
               </ResponsiveContainer>
             </div>
           </TabsContent>
-          
+
           <TabsContent value="yearly" className="mt-4">
             <div className="h-80">
               <ResponsiveContainer width="100%" height="100%">
@@ -148,16 +150,16 @@ export function EnhancedCharts({ monthlyData, yearlyData, categoryData }: Enhanc
                     <CartesianGrid strokeDasharray="3 3" />
                     <XAxis dataKey="name" />
                     <YAxis tickFormatter={currencyFormatter} />
-                    <RechartsTooltip 
+                    <RechartsTooltip
                       formatter={currencyFormatter}
-                      labelFormatter={(label) => `Year: ${label}`}
+                      labelFormatter={(label) => `${t('charts.year')}: ${label}`}
                     />
                     <Legend />
-                    <Bar dataKey="income" fill="#4CAF50" name="Income" />
-                    <Bar dataKey="expense" fill="#F44336" name="Expense" />
+                    <Bar dataKey="income" fill="#4CAF50" name={t('dashboard.income')} />
+                    <Bar dataKey="expense" fill="#F44336" name={t('dashboard.expenses')} />
                   </BarChart>
                 )}
-                
+
                 {chartType === 'area' && (
                   <AreaChart
                     data={yearlyData}
@@ -166,16 +168,16 @@ export function EnhancedCharts({ monthlyData, yearlyData, categoryData }: Enhanc
                     <CartesianGrid strokeDasharray="3 3" />
                     <XAxis dataKey="name" />
                     <YAxis tickFormatter={currencyFormatter} />
-                    <RechartsTooltip 
+                    <RechartsTooltip
                       formatter={currencyFormatter}
-                      labelFormatter={(label) => `Year: ${label}`}
+                      labelFormatter={(label) => `${t('charts.year')}: ${label}`}
                     />
                     <Legend />
-                    <Area type="monotone" dataKey="income" stackId="1" stroke="#4CAF50" fill="#4CAF50" name="Income" />
-                    <Area type="monotone" dataKey="expense" stackId="2" stroke="#F44336" fill="#F44336" name="Expense" />
+                    <Area type="monotone" dataKey="income" stackId="1" stroke="#4CAF50" fill="#4CAF50" name={t('dashboard.income')} />
+                    <Area type="monotone" dataKey="expense" stackId="2" stroke="#F44336" fill="#F44336" name={t('dashboard.expenses')} />
                   </AreaChart>
                 )}
-                
+
                 {chartType === 'line' && (
                   <LineChart
                     data={yearlyData}
@@ -184,19 +186,19 @@ export function EnhancedCharts({ monthlyData, yearlyData, categoryData }: Enhanc
                     <CartesianGrid strokeDasharray="3 3" />
                     <XAxis dataKey="name" />
                     <YAxis tickFormatter={currencyFormatter} />
-                    <RechartsTooltip 
+                    <RechartsTooltip
                       formatter={currencyFormatter}
-                      labelFormatter={(label) => `Year: ${label}`}
+                      labelFormatter={(label) => `${t('charts.year')}: ${label}`}
                     />
                     <Legend />
-                    <Line type="monotone" dataKey="income" stroke="#4CAF50" name="Income" />
-                    <Line type="monotone" dataKey="expense" stroke="#F44336" name="Expense" />
+                    <Line type="monotone" dataKey="income" stroke="#4CAF50" name={t('dashboard.income')} />
+                    <Line type="monotone" dataKey="expense" stroke="#F44336" name={t('dashboard.expenses')} />
                   </LineChart>
                 )}
               </ResponsiveContainer>
             </div>
           </TabsContent>
-          
+
           <TabsContent value="category" className="mt-4">
             <div className="h-80">
               <ResponsiveContainer width="100%" height="100%">
@@ -212,13 +214,13 @@ export function EnhancedCharts({ monthlyData, yearlyData, categoryData }: Enhanc
                     dataKey="value"
                   >
                     {categoryData.map((entry, index) => (
-                      <Cell 
-                        key={`cell-${index}`} 
-                        fill={entry.color || COLORS[index % COLORS.length]} 
+                      <Cell
+                        key={`cell-${entry.name}-${index}`}
+                        fill={entry.color || COLORS[index % COLORS.length]}
                       />
                     ))}
                   </Pie>
-                  <RechartsTooltip 
+                  <RechartsTooltip
                     formatter={(value: number) => formatCurrency(value)}
                   />
                   <Legend />

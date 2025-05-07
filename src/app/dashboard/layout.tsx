@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import Link from 'next/link';
 import { useAuth } from '@/contexts/auth-context';
+import { useLanguage } from '@/contexts/language-context';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -17,6 +18,7 @@ import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { ThemeProvider, useTheme } from '@/contexts/ThemeContext';
 import { TransactionModalProvider, useTransactionModal } from '@/contexts/transaction-modal-context';
+import { LanguageSwitcher } from '@/components/language-switcher';
 
 // Create a wrapper component that uses the theme context
 function DashboardLayoutContent({
@@ -30,6 +32,7 @@ function DashboardLayoutContent({
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const { theme, toggleTheme } = useTheme();
   const { openAddTransactionModal } = useTransactionModal();
+  const { t, language } = useLanguage();
 
   useEffect(() => {
     if (!isLoading && !user) {
@@ -62,7 +65,7 @@ function DashboardLayoutContent({
 
   const navItems = [
     {
-      name: 'Dashboard',
+      name: t('common.dashboard'),
       href: '/dashboard',
       icon: (
         <svg
@@ -83,7 +86,7 @@ function DashboardLayoutContent({
       ),
     },
     {
-      name: 'Transactions',
+      name: t('common.transactions'),
       href: '/dashboard/transactions',
       icon: (
         <svg
@@ -106,7 +109,7 @@ function DashboardLayoutContent({
       ),
     },
     {
-      name: 'Import',
+      name: language === 'pt' ? 'Importar' : 'Import',
       href: '/dashboard/import',
       icon: (
         <svg
@@ -126,7 +129,7 @@ function DashboardLayoutContent({
       ),
     },
     {
-      name: 'Budgets',
+      name: t('common.budgets'),
       href: '/dashboard/budgets',
       icon: (
         <svg
@@ -146,7 +149,7 @@ function DashboardLayoutContent({
       ),
     },
     {
-      name: 'Reports',
+      name: t('common.reports'),
       href: '/dashboard/reports',
       icon: (
         <svg
@@ -164,7 +167,6 @@ function DashboardLayoutContent({
         </svg>
       ),
     },
-
   ];
 
   return (
@@ -211,8 +213,11 @@ function DashboardLayoutContent({
                 <path d="M12 5v14" />
                 <path d="M5 12h14" />
               </svg>
-              Add Transaction
+              {t('dashboard.addTransaction')}
             </Button>
+
+            {/* Language Switcher */}
+            <LanguageSwitcher />
 
             {/* Theme Toggle Button */}
             <Button
@@ -354,7 +359,7 @@ function DashboardLayoutContent({
                       <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2" />
                       <circle cx="12" cy="7" r="4" />
                     </svg>
-                    Profile
+                    {t('settings.profile')}
                   </Link>
                 </DropdownMenuItem>
                 <DropdownMenuItem asChild className="text-gray-700 dark:text-gray-300 hover:text-gray-900 hover:bg-gray-100 dark:hover:text-white dark:hover:bg-gray-700 cursor-pointer">
@@ -372,7 +377,7 @@ function DashboardLayoutContent({
                       <path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z" />
                       <circle cx="12" cy="12" r="3" />
                     </svg>
-                    Settings
+                    {t('common.settings')}
                   </Link>
                 </DropdownMenuItem>
                 <DropdownMenuSeparator className="bg-gray-200 dark:bg-gray-700" />
@@ -391,7 +396,7 @@ function DashboardLayoutContent({
                     <polyline points="16 17 21 12 16 7" />
                     <line x1="21" y1="12" x2="9" y2="12" />
                   </svg>
-                  Log out
+                  {t('common.logout')}
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
@@ -422,7 +427,7 @@ function DashboardLayoutContent({
 
               <div className="mt-6 rounded-lg bg-gray-50 border border-gray-200 p-4 dark:bg-gray-700 dark:border-gray-600">
                 <div className="mb-2 flex items-center justify-between">
-                  <h3 className="font-medium text-gray-900 dark:text-white">Quick Actions</h3>
+                  <h3 className="font-medium text-gray-900 dark:text-white">{t('dashboard.quickActions')}</h3>
                 </div>
                 <div className="grid gap-2">
                   <Button
@@ -443,7 +448,7 @@ function DashboardLayoutContent({
                       <path d="M12 5v14" />
                       <path d="M5 12h14" />
                     </svg>
-                    Add Income
+                    {t('transactions.addIncome')}
                   </Button>
                   <Button
                     size="sm"
@@ -463,7 +468,7 @@ function DashboardLayoutContent({
                       <path d="M12 5v14" />
                       <path d="M5 12h14" />
                     </svg>
-                    Add Expense
+                    {t('transactions.addExpense')}
                   </Button>
                   <Link href="/dashboard/import">
                     <Button size="sm" className="w-full justify-start bg-blue-600 hover:bg-blue-700 text-white border-0 dark:bg-blue-500 dark:hover:bg-blue-600">
@@ -481,7 +486,7 @@ function DashboardLayoutContent({
                         <polyline points="17 8 12 3 7 8" />
                         <line x1="12" y1="3" x2="12" y2="15" />
                       </svg>
-                      Import Transactions
+                      {t('import.importTransactions')}
                     </Button>
                   </Link>
                 </div>
